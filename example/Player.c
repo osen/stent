@@ -30,7 +30,7 @@ void PlayerDestroy(REF(Player) ctx)
 
 void PlayerSetTarget(REF(Player) ctx, REF(Player) target)
 {
-  ctx.ptr->target = target;
+  GET(ctx)->target = target;
 }
 
 REF(Weapon) PlayerWeapon(REF(Player) ctx)
