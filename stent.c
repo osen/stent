@@ -15,6 +15,7 @@ struct RefData
   int line;
 };
 
+struct RefObject _refObject;
 struct RefData *_refs[MAX_REFS];
 time_t _refTime;
 int _refUnique;
@@ -83,7 +84,7 @@ void RefCleanup()
   }
 }
 
-void _RefCalloc(struct RefObject *ref, size_t size, char *type, char *file, int line)
+struct RefObject *_RefCalloc(size_t size, char *type, char *file, int line)
 {
   int i = 0;
   struct RefData *refData = NULL;
@@ -129,11 +130,13 @@ void _RefCalloc(struct RefObject *ref, size_t size, char *type, char *file, int 
 
   _refUnique++;
 
-  ref->idx = i;
-  ref->get = _RefGet;
-  ref->ptr = refData->ptr;
-  ref->unique = refData->unique;
-  ref->time = refData->time;
+  _refObject.idx = i;
+  _refObject.get = _RefGet;
+  _refObject.ptr = refData->ptr;
+  _refObject.unique = refData->unique;
+  _refObject.time = refData->time;
+
+  return &_refObject;
 }
 
 void *_RefGet(int idx, void *ptr, int unique, time_t time)
