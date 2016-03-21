@@ -90,3 +90,16 @@ Leak Detector
 -------------
 There is also basic support for leak detection. Have a look at the
 "example/leak" project for more information.
+
+For a simple example, if a leak exists, a message will appear such as:
+
+***** Memory Leak ******
+Type: struct Test
+File: example/leak/main.c
+Line: 14
+
+The only thing to remember is to add the following two lines to the end
+of the program.
+
+RefStats();       // Scan internal memory for list of data yet to be freed.
+RefCleanup();     // Free and reset internal memory used by Stent.
