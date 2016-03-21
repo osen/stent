@@ -4,9 +4,9 @@ Completely avoid dangling pointers in C.
 
 How It Works
 ------------
-By borrowing the idea of a std::weak_ptr in C++ (or more closely wxWeakRef
-from wxWidgets), C can also work in a more deterministic manner without
-impacting the design of a program code too much.
+By borrowing concepts from std::weak_ptr in C++ (or more closely wxWeakRef
+from wxWidgets), Memory errors in C can appear in a more deterministic
+manner without impacting the design of program code too much.
 
 Rather than using a raw pointer, the developer uses a pointer wrapper
 which is guaranteed to return NULL as soon as the original data being
@@ -83,7 +83,7 @@ the header files for the types which are used. This may cause cyclic
 dependencies if not handled carefully. The best solution to avoid all
 this currently seems to be all struct definitions to be done within
 the C file. Again, remember that the full implementation of a structure
-(and thus a REF(SomeStruct) does not need to be known within a function
+(and thus a REF(SomeStruct)) does not need to be known within a function
 declaration within a header file.
 
 Leak Detector
