@@ -9,15 +9,15 @@ from wxWidgets), C can also work in a more deterministic manner without
 impacting the design of a program code too much.
 
 Rather than using a raw pointer, the developer uses a pointer wrapper
-which is guarenteed to return NULL as soon as the original data being
+which is guaranteed to return NULL as soon as the original data being
 pointed to is freed.
 
 Getting Started
 ---------------
-There are a few considerations that a developer needs before
-using stent. The following instructions should provide a brief overview
-of the steps required. However, a brief look through the "example/game"
-project should also explain these concepts quickly.
+There are a few considerations that a developer needs to make before
+using Stent. The following instructions should provide a brief overview
+of the steps required. However, a quick look through the "example/game"
+project should also explain these concepts.
 
 1) Include the "stent.h" header file.
 
@@ -57,6 +57,15 @@ struct Test
   struct SomeStruct *someStruct;     // Standard C
   REF(SomeStruct) someStruct;        // Using Stent
 };
+
+8) Pass pointer into function (Function prototypes):
+
+void SomeStructDoSomething(struct SomeStruct *someStruct);     // Standard C
+void SomeStructDoDomething(REF(SomeStruct) someStruct);        // Using Stent
+
+9) Pass pointer into function (Calling function):
+
+SomeStructDoSomething(someStruct);     // Same for both Standard C and Stent
 
 Limitations
 -----------
