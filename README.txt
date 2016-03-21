@@ -1,38 +1,83 @@
-stent
+Stent
 =====
 Avoid dangling pointers in C.
 
 How It Works
 ------------
 By borrowing the idea of a std::weak_ptr in C++ (or more closely wxWeakRef
-from wxWidget), C can also work in a more deterministic manner without
+from wxWidgets), C can also work in a more deterministic manner without
 impacting the design of a program code too much.
 
-Rather than using raw pointer, the developer uses a pointer wrapper
+Rather than using a raw pointer, the developer uses a pointer wrapper
 which is guarenteed to return NULL as soon as the original data being
 pointed to is freed.
 
 Getting Started
 ---------------
-There are a few considerations that a developer needs to know before
-using stent. The following instructions are a brief overview of the
-steps required.
+There are a few considerations that a developer needs before
+using stent. The following instructions should provide a brief overview
+of the steps required. However, a brief look through the "example/game"
+project should also explain these concepts quickly.
 
 1) Include the "stent.h" header file.
 
-2) Instead of using the following to declare a pointer:
+2) Declare a variable to store the pointer:
 
-struct SomeStruct *someStruct = NULL;
+struct SomeStruct *someStruct = NULL;     // Standard C
+REF(SomeStruct) someStruct = {};          // Using Stent
 
-use
+3) To dereference a pointer:
 
-REF(SomeStruct) someStruct = {};
+someStruct->someData = 6;      // Standard C
+GET(someStruct)->someData;     // Using Stent
 
-3) Instead of using the following to dereference a pointer:
+4) To allocate dynamic memory:
 
-someStruct->someData = 6;
+someStruct = calloc(1, sizeof(*someStruct));     // Standard C
+someStruct = CALLOC(SomeStruct);                 // Using Stent
 
-use
+5) To free dynamic memory:
 
-GET(someStruct)->someData;
+free(someStruct);     // Standard C
+FREE(someStruct);     // Using Stent
 
+Note that when using Stent, any time you dereference a pointer using
+GET(), it will return NULL since the memory pointed to is no longer valid.
+This means that without checking, the program will reliably crash.
+
+6) Forward declaring a structure:
+
+struct SomeStruct;     // Standard C
+REF(SomeStruct);       // Using Stent
+
+7) Defining a structure containing a pointer:
+
+struct Test
+{
+  struct SomeStruct *someStruct;     // Standard C
+  REF(SomeStruct) someStruct;        // Using Stent
+};
+
+Limitations
+-----------
+Pointer wrappers need to be fully declared for their size to be known
+if they are to be used. However, importantly they do not need to be
+fully declared withing declarations of functions using them, only
+function definitions. This can be done with the following (i.e in the
+SomeStruct.h file).
+
+DECLARE(SomeStruct);
+
+This does mean that if a structure is declared within a header file and
+contains Stent references, it will require the developer to include
+the header files for the types which are used. This may cause cyclic
+dependencies if not handled carefully. The best solution to avoid all
+this currently seems to be all struct definitions to be done within
+the C file. Again, remember that the full implementation of a structure
+(and thus a REF(SomeStruct) does not need to be known within a function
+declaration within a header file.
+
+Leak Detector
+-------------
+There is also basic support for leak detection. Have a look at the
+"example/leak" project for more information.
