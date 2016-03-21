@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 mkdir -p lib
 cc -Wall -olib/libstent.so -shared -fPIC stent.c
 

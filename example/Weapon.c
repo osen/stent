@@ -15,6 +15,7 @@ REF(Weapon) WeaponCreate(REF(Player) owner)
 
   rtn = CALLOC(Weapon);
   GET(rtn)->owner = owner;
+  GET(rtn)->ammo = 50;
 
   return rtn;
 }
