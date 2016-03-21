@@ -1,6 +1,6 @@
 Stent
 =====
-Avoid dangling pointers in C.
+Completely avoid dangling pointers in C.
 
 How It Works
 ------------
