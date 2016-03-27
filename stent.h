@@ -29,8 +29,10 @@ extern struct RefObject _refObject;
     struct T *(*get)(int idx, void *ptr, int unique, time_t time); \
   }
  
+struct RefObject *_RefAttach(void *ptr, char *type, char *file, int line);
 struct RefObject *_RefCalloc(size_t size, char *type, char *file, int line);
 void _RefFree(struct RefObject *ref);
+void _RefRelease(void *ptr);
 
 void *_RefGet(int idx, void *ptr, int unique, time_t time);
 
@@ -42,6 +44,9 @@ void *_RefGet(int idx, void *ptr, int unique, time_t time);
 
 #define FREE(R) \
   _RefFree((struct RefObject*)&R)
+
+#define ATTACH(T, P) \
+  *((struct T##Ref*)_RefAttach(P, "struct "#T, __FILE__, __LINE__))
 
 void RefStats();
 void RefCleanup();

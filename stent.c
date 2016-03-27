@@ -20,6 +20,33 @@ struct RefData *_refs[MAX_REFS];
 time_t _refTime;
 int _refUnique;
 
+void _RefRelease(void *ptr)
+{
+  int i = 0;
+  struct RefData *refData = NULL;
+
+  for(i = 0; i < MAX_REFS; i++)
+  {
+    refData = _refs[i];
+
+    if(refData == NULL)
+    {
+      break;
+    }
+
+    if(refData->ptr == NULL)
+    {
+      continue;
+    }
+
+    if(refData->ptr == ptr)
+    {
+      refData->ptr = NULL;
+      return;
+    }
+  }
+}
+
 void _RefFree(struct RefObject *ref)
 {
   struct RefData *refData = NULL;
@@ -84,7 +111,7 @@ void RefCleanup()
   }
 }
 
-struct RefObject *_RefCalloc(size_t size, char *type, char *file, int line)
+struct RefObject *_RefAttach(void *ptr, char *type, char *file, int line)
 {
   int i = 0;
   struct RefData *refData = NULL;
@@ -121,7 +148,7 @@ struct RefObject *_RefCalloc(size_t size, char *type, char *file, int line)
     _refUnique = 0;
   }
 
-  refData->ptr = calloc(1, size);
+  refData->ptr = ptr;
   refData->unique = _refUnique;
   refData->time = _refTime;
   refData->type = strdup(type);
@@ -137,6 +164,11 @@ struct RefObject *_RefCalloc(size_t size, char *type, char *file, int line)
   _refObject.time = refData->time;
 
   return &_refObject;
+}
+
+struct RefObject *_RefCalloc(size_t size, char *type, char *file, int line)
+{
+  return _RefAttach(calloc(1, size), type, file, line);
 }
 
 void *_RefGet(int idx, void *ptr, int unique, time_t time)
