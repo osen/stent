@@ -120,9 +120,29 @@ struct RefObject *_RefAttach(void *ptr, char *type, char *file, int line)
   if(ptr == NULL)
   {
     memset(&_refObject, 0, sizeof(_refObject));
-    _refObject.get = _RefGet;
 
     return &_refObject;
+  }
+
+  for(i = 0; i < MAX_REFS; i++)
+  {
+    if(_refs[i] == NULL)
+    {
+      break;
+    }
+
+    if(_refs[i]->ptr == ptr)
+    {
+      refData = _refs[i];
+
+      _refObject.idx = i;
+      _refObject.get = _RefGet;
+      _refObject.ptr = refData->ptr;
+      _refObject.unique = refData->unique;
+      _refObject.time = refData->time;
+
+      return &_refObject;
+    }
   }
 
   for(i = 0; i < MAX_REFS; i++)

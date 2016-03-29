@@ -10,6 +10,7 @@ int main(int argc, char* argv[])
   REF(Player) player = {};
   REF(Weapon) weapon = {};
   REF(Player) enemy = {};
+  REF(Player) attachTest = {};
 
   player = PlayerCreate();
   weapon = PlayerWeapon(player);
@@ -19,12 +20,19 @@ int main(int argc, char* argv[])
   printf("Player: %p\n", GET(player));
   printf("Weapon: %p\n", GET(weapon));
 
+  attachTest = ATTACH(Player, NULL);
+  printf("Attach Test 1: %p\n", GET(attachTest));
+
+  attachTest = ATTACH(Player, GET(player));
+  printf("Attach Test 2: %p\n", GET(attachTest));
+
   PlayerDestroy(enemy);
   printf("Player Target: %p\n", GET(PlayerTarget(player)));
   PlayerDestroy(player);
 
   printf("Player: %p\n", GET(player));
   printf("Weapon: %p\n", GET(weapon));
+  printf("Attach Test: %p\n", GET(attachTest));
 
   RefStats();
   RefCleanup();
