@@ -117,6 +117,14 @@ struct RefObject *_RefAttach(void *ptr, char *type, char *file, int line)
   struct RefData *refData = NULL;
   time_t currentTime = 0;
 
+  if(ptr == NULL)
+  {
+    memset(&_refObject, 0, sizeof(_refObject));
+    _refObject.get = _RefGet;
+
+    return &_refObject;
+  }
+
   for(i = 0; i < MAX_REFS; i++)
   {
     if(_refs[i] == NULL)
@@ -130,6 +138,7 @@ struct RefObject *_RefAttach(void *ptr, char *type, char *file, int line)
     {
       refData = _refs[i];
       if(refData->file) free(refData->file);
+      if(refData->type) free(refData->type);
       break;
     }
   }
