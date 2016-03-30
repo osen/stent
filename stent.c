@@ -111,7 +111,7 @@ void RefCleanup()
   }
 }
 
-struct RefObject *_RefAttach(void *ptr, char *type, char *file, int line)
+struct RefObject *_RefPlace(int place, void *ptr, char *type, char *file, int line)
 {
   int i = 0;
   struct RefData *refData = NULL;
@@ -124,22 +124,32 @@ struct RefObject *_RefAttach(void *ptr, char *type, char *file, int line)
     return &_refObject;
   }
 
-  for(i = 0; i < MAX_REFS; i++)
+  if(place != 1)
   {
-    if(_refs[i] == NULL)
+    for(i = 0; i < MAX_REFS; i++)
     {
-      break;
+      if(_refs[i] == NULL)
+      {
+        break;
+      }
+
+      if(_refs[i]->ptr == ptr)
+      {
+        refData = _refs[i];
+
+        _refObject.idx = i;
+        _refObject.get = _RefGet;
+        _refObject.ptr = refData->ptr;
+        _refObject.unique = refData->unique;
+        _refObject.time = refData->time;
+
+        return &_refObject;
+      }
     }
 
-    if(_refs[i]->ptr == ptr)
+    if(strlen(type) != 0)
     {
-      refData = _refs[i];
-
-      _refObject.idx = i;
-      _refObject.get = _RefGet;
-      _refObject.ptr = refData->ptr;
-      _refObject.unique = refData->unique;
-      _refObject.time = refData->time;
+      memset(&_refObject, 0, sizeof(_refObject));
 
       return &_refObject;
     }
@@ -195,9 +205,14 @@ struct RefObject *_RefAttach(void *ptr, char *type, char *file, int line)
   return &_refObject;
 }
 
+struct RefObject *_RefAttach(void *ptr, char *type, char *file, int line)
+{
+  return _RefPlace(0, ptr, type, file, line);
+}
+
 struct RefObject *_RefCalloc(size_t size, char *type, char *file, int line)
 {
-  return _RefAttach(calloc(1, size), type, file, line);
+  return _RefPlace(1, calloc(1, size), type, file, line);
 }
 
 void *_RefGet(int idx, void *ptr, int unique, time_t time)

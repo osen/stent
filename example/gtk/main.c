@@ -2,6 +2,7 @@
 
 struct WindowData
 {
+  REF(_GtkWindow) window;
   int a;
 };
 
@@ -9,28 +10,40 @@ DECLARE(WindowData);
 
 static void print_hello(struct _GtkWidget *widget, gpointer data)
 {
+  REF(_GtkWidget) owner = {};
   REF(WindowData) windowData = {};
+  REF(_GtkWindow) window = {};
 
-  //REATTACH(windowData, WindowData, data);
-  ATTACH(windowData, data);
+  G_OBJECT_ATTACH(owner, widget);
+
+  // REATTACH used to ensure type safe conversion from "gpointer" to "WindowData".
+  REATTACH(windowData, WindowData, data);
+
+  G_OBJECT_ATTACH(window, GTK_WINDOW(gtk_widget_get_toplevel(GET(owner))));
 
   if(GET(windowData) == NULL)
   {
-    printf("No data was passed or invalid type\n");
+    printf("No data was passed, invalid type or freed\n");
+    quick_message(window, "No data was passed, invalid type or freed");
     return;
   }
 
   printf("Number should be 8: %i\n", GET(windowData)->a);
+  printf("I am now going to free this data so try clicking the button again\n");
+
+  quick_message(GET(windowData)->window, "I am now going to free this data so try clicking the button again");
+
+  FREE(windowData);
 }
 
 static void activate(GtkApplication *app, gpointer user_data)
 {
-  REF(_GtkWidget) window = {};
+  REF(_GtkWindow) window = {};
   REF(_GtkWidget) button = {};
   REF(_GtkWidget) button_box = {};
   REF(WindowData) data = {};
 
-  G_OBJECT_ATTACH(window, gtk_application_window_new(app));
+  G_OBJECT_ATTACH(window, GTK_WINDOW(gtk_application_window_new(app)));
   gtk_window_set_title(GTK_WINDOW(GET(window)), "Window");
   gtk_window_set_default_size(GTK_WINDOW(GET(window)), 200, 200);
 
@@ -39,13 +52,14 @@ static void activate(GtkApplication *app, gpointer user_data)
 
   data = CALLOC(WindowData);
   GET(data)->a = 8;
+  GET(data)->window = window;
 
   G_OBJECT_ATTACH(button, gtk_button_new_with_label("Hello World"));
   g_signal_connect(GET(button), "clicked", G_CALLBACK(print_hello), GET(data));
-  g_signal_connect_swapped(GET(button), "clicked", G_CALLBACK(gtk_widget_destroy), GET(window));
+  //g_signal_connect_swapped(GET(button), "clicked", G_CALLBACK(gtk_widget_destroy), GET(window));
   gtk_container_add(GTK_CONTAINER(GET(button_box)), GET(button));
 
-  gtk_widget_show_all(GET(window));
+  gtk_widget_show_all(GTK_WIDGET(GET(window)));
 }
 
 int main(int argc, char **argv)
@@ -67,7 +81,7 @@ int main(int argc, char **argv)
   printf("After: %p\n", GET(app));
 
   // Inform us of any memory leaks in the program.
-  // We have 1 leak in this program to test.
+  // We have 1 leak in this program unless button was clicked.
   RefStats();
   RefCleanup();
 

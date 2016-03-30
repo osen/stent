@@ -49,7 +49,11 @@ void *_RefGet(int idx, void *ptr, int unique, time_t time);
 
 #define ATTACH(R, P) \
   *(void **)(&R.attach) = _RefAttach; \
-  R = *R.attach(P, "unknown", __FILE__, __LINE__)
+  R = *R.attach(P, "", __FILE__, __LINE__)
+
+#define REATTACH(R, T, P) \
+  *(void **)(&R.attach) = _RefAttach; \
+  R = *R.attach(P, #T, __FILE__, __LINE__)
 
 void RefStats();
 void RefCleanup();
