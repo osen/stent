@@ -10,7 +10,7 @@ void expired(gpointer data, GObject *where_the_object_was);
   do \
   { \
     gpointer fTest = 0; \
-    ATTACH(R, P); \
+    ATTACH_T(R, _GObject, P); \
     fTest = g_object_get_data(G_OBJECT(GET(R)), "_stent_func_set"); \
     if(fTest == 0) \
     { \
@@ -19,6 +19,9 @@ void expired(gpointer data, GObject *where_the_object_was);
     } \
   } \
   while(0)
+
+#define G_OBJECT_REATTACH(R, P) \
+  REATTACH_T(R, _GObject, P)
 
 DECLARE(_GtkApplication);
 DECLARE(_GtkWindow);

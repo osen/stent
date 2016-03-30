@@ -14,6 +14,8 @@ int main(int argc, char *argv[])
   leaking = CALLOC(Test);
   GET(leaking)->someData = 9;
 
+  //FREE(leaking);
+
   RefStats();
   RefCleanup();
 

@@ -14,12 +14,12 @@ static void print_hello(struct _GtkWidget *widget, gpointer data)
   REF(WindowData) windowData = {};
   REF(_GtkWindow) window = {};
 
-  G_OBJECT_ATTACH(owner, widget);
+  G_OBJECT_REATTACH(owner, widget);
 
   // REATTACH used to ensure type safe conversion from "gpointer" to "WindowData".
-  REATTACH(windowData, WindowData, data);
+  REATTACH_T(windowData, WindowData, data);
 
-  G_OBJECT_ATTACH(window, GTK_WINDOW(gtk_widget_get_toplevel(GET(owner))));
+  G_OBJECT_REATTACH(window, GTK_WINDOW(gtk_widget_get_toplevel(GET(owner))));
 
   if(GET(windowData) == NULL)
   {
@@ -56,6 +56,7 @@ static void activate(GtkApplication *app, gpointer user_data)
 
   G_OBJECT_ATTACH(button, gtk_button_new_with_label("Hello World"));
   g_signal_connect(GET(button), "clicked", G_CALLBACK(print_hello), GET(data));
+  //g_signal_connect(GET(button), "clicked", G_CALLBACK(print_hello), &data);
   //g_signal_connect_swapped(GET(button), "clicked", G_CALLBACK(gtk_widget_destroy), GET(window));
   gtk_container_add(GTK_CONTAINER(GET(button_box)), GET(button));
 
@@ -67,7 +68,7 @@ int main(int argc, char **argv)
   int status = 0;
   REF(_GtkApplication) app = {};
 
-  G_OBJECT_ATTACH(app, gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE));
+  G_OBJECT_ATTACH(app, gtk_application_new("stent.gtk_example", G_APPLICATION_FLAGS_NONE));
 
   g_signal_connect(GET(app), "activate", G_CALLBACK(activate), NULL);
   status = g_application_run(G_APPLICATION(GET(app)), argc, argv);
