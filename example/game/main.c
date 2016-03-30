@@ -20,10 +20,11 @@ int main(int argc, char* argv[])
   printf("Player: %p\n", GET(player));
   printf("Weapon: %p\n", GET(weapon));
 
-  attachTest = ATTACH(Player, NULL);
+  ATTACH(attachTest, NULL);
+  //ATTACH(attachTest, GET(weapon));
   printf("Attach Test 1: %p\n", GET(attachTest));
 
-  attachTest = ATTACH(Player, GET(player));
+  ATTACH(attachTest, GET(player));
   printf("Attach Test 2: %p\n", GET(attachTest));
 
   PlayerDestroy(enemy);

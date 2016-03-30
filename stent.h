@@ -14,6 +14,7 @@ struct RefObject
   int unique;
   time_t time;
   void *(*get)();
+  void *(*attach)();
 };
 
 extern struct RefObject _refObject;
@@ -26,9 +27,9 @@ extern struct RefObject _refObject;
     struct T *ptr; \
     int unique; \
     time_t time; \
-    struct T *(*get)(int idx, void *ptr, int unique, time_t time); \
+    struct T *(*get)(int, void*, int, time_t); \
+    struct T##Ref *(*attach)(struct T*, char*, char*, int); \
   }; \
-  static struct T##Ref* (*T##_RefAttach)(struct T *ptr, char *type, char *file, int line) = (struct T##Ref* (*)(struct T *ptr, char *type, char *file, int line))_RefAttach
  
 struct RefObject *_RefAttach(void *ptr, char *type, char *file, int line);
 struct RefObject *_RefCalloc(size_t size, char *type, char *file, int line);
@@ -46,8 +47,9 @@ void *_RefGet(int idx, void *ptr, int unique, time_t time);
 #define FREE(R) \
   _RefFree((struct RefObject*)&R)
 
-#define ATTACH(T, P) \
-  *(T##_RefAttach(P, "struct "#T, __FILE__, __LINE__))
+#define ATTACH(R, P) \
+  *(void **)(&R.attach) = _RefAttach; \
+  R = *R.attach(P, "unknown", __FILE__, __LINE__)
 
 void RefStats();
 void RefCleanup();
