@@ -50,13 +50,18 @@ static void print_hello(struct _GtkWidget *widget, gpointer data)
 
 static void activate(GtkApplication *app, gpointer user_data)
 {
+  REF(_GtkApplication) _app = {};
   REF(_GtkWindow) window = {};
   REF(_GtkWidget) button = {};
   REF(_GtkWidget) button_box = {};
   REF(WindowData) data = {};
 
+  // Make sure that app ptr is valid by reattaching to the previous "smart"
+  // reference created in main
+  G_OBJECT_REATTACH(_app, app);
+
   // Create GtkWindow and set some attributes
-  G_OBJECT_ATTACH(window, GTK_WINDOW(gtk_application_window_new(app)));
+  G_OBJECT_ATTACH(window, GTK_WINDOW(gtk_application_window_new(GET(_app))));
   gtk_window_set_title(GTK_WINDOW(GET(window)), "Window");
   gtk_window_set_default_size(GTK_WINDOW(GET(window)), 200, 200);
 
