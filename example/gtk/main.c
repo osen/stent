@@ -10,7 +10,7 @@ struct WindowData
   int a;                  // Some random data to test
 };
 
-DECLARE(WindowData); // Provides the "smart" definition of REF(WindowData)
+REFDEF(WindowData); // Provides the "smart" definition of REF(WindowData)
 
 static void print_hello(struct _GtkWidget *widget, gpointer data)
 {

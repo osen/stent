@@ -23,9 +23,9 @@ void expired(gpointer data, GObject *where_the_object_was);
 #define G_OBJECT_REATTACH(R, P) \
   REATTACH_T(R, _GObject, P)
 
-DECLARE(_GtkApplication);
-DECLARE(_GtkWindow);
-DECLARE(_GtkWidget);
+REFDEF(_GtkApplication);
+REFDEF(_GtkWindow);
+REFDEF(_GtkWidget);
 
 void quick_message(REF(_GtkWindow) parent, gchar *message);
 

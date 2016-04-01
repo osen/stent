@@ -1,7 +1,7 @@
 #include <stent.h>
 
 REF(Player);
-DECLARE(Weapon);
+REFDEF(Weapon);
 
 REF(Weapon) WeaponCreate(REF(Player) owner);
 void WeaponDestroy(REF(Weapon) ctx);

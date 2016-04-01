@@ -19,8 +19,17 @@ struct RefObject
 
 extern struct RefObject _refObject;
 
-#define DECLARE(T) \
+#define REFDEF(T) \
   struct T; \
+  DECLARE(T); \
+  struct _##T##Array \
+  { \
+    REF(T) *data; \
+    int size; \
+  }; \
+  DECLARE(_##T##Array)
+
+#define DECLARE(T) \
   struct T##Ref \
   { \
     int idx; \

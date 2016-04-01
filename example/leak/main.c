@@ -1,6 +1,6 @@
 #include <stent.h>
 
-DECLARE(Test);
+REFDEF(Test);
 
 struct Test
 {
