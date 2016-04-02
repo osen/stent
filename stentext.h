@@ -3,6 +3,8 @@
 
 #include "stent.h"
 
+size_t _AbortIfNotLess(size_t a, size_t b);
+
 #define ARRAY(T) \
   struct _##T##ArrayRef
 
@@ -10,8 +12,13 @@
   *((struct _##T##ArrayRef*)_RefCalloc(sizeof(struct _##T##Array), "struct "#T"[]", __FILE__, __LINE__))
 
 #define ARRAY_FREE(A) \
-  if(GET(A)->data) free(GET(A)->data); \
-  FREE(A)
+  do \
+  { \
+    if(GET(A) == NULL) break; \
+    if(GET(A)->data) free(GET(A)->data); \
+    FREE(A); \
+  } \
+  while(0)
 
 #define ARRAY_ADD(A, E) \
   do \
@@ -29,6 +36,6 @@
   GET(A)->size
 
 #define ARRAY_AT(A, I) \
-  GET(A)->data[I]
+  GET(A)->data[_AbortIfNotLess(I, GET(A)->size)]
 
 #endif

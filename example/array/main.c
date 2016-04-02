@@ -48,9 +48,15 @@ int main(int argc, char *argv[])
 
   print_employees(employees);
 
-  FREE(employee);
+  // Test out of bounds abort()
+  //print_employee(ARRAY_AT(employees, 100));
+
   FREE(employee);
   FREE(ARRAY_AT(employees, 1));
+  ARRAY_FREE(employees);
+
+  // Double free? Should be fine
+  FREE(employee);
   ARRAY_FREE(employees);
 
   RefStats();

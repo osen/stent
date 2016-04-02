@@ -252,3 +252,13 @@ void *_RefGet(int idx, void *ptr, int unique, time_t time)
 
   return refData->ptr;
 }
+
+size_t _AbortIfNotLess(size_t a, size_t b)
+{
+  if(a < b)
+  {
+    return a;
+  }
+
+  abort();
+}
