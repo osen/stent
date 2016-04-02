@@ -1,12 +1,17 @@
 #include <stent.h>
 #include <stentext.h>
 
-//REF(Employee);
-//ARRAY(Employee);
+#include <stdio.h>
 
-//void print_employee(REF(Employee) employee);
-//void print_employees(ARRAY(Employee) employees);
+// Forward declares using stent
+REF(Employee);
+ARRAY(Employee);
 
+// Forward declaration of functions
+void print_employee(REF(Employee) employee);
+void print_employees(ARRAY(Employee) employees);
+
+// Prepare type for use with stent. Similar to typedef
 REFDEF(Employee);
 
 struct Employee
@@ -14,9 +19,19 @@ struct Employee
   int id;
 };
 
+void print_employee(REF(Employee) employee)
+{
+  printf("Employee ID: %i\n", GET(employee)->id);
+}
+
 void print_employees(ARRAY(Employee) employees)
 {
+  int i = 0;
 
+  for(i = 0; i < ARRAY_SIZE(employees); i++)
+  {
+    print_employee(ARRAY_AT(employees, i));
+  }
 }
 
 int main(int argc, char *argv[])
@@ -28,11 +43,15 @@ int main(int argc, char *argv[])
   GET(employee)->id = 9;
 
   employees = ARRAY_ALLOC(Employee);
-  //ARRAY_ADD(CALLOC(Employee));
+  ARRAY_ADD(employees, employee);
+  ARRAY_ADD(employees, CALLOC(Employee));
 
   print_employees(employees);
 
   FREE(employee);
+  FREE(employee);
+  FREE(ARRAY_AT(employees, 1));
+  ARRAY_FREE(employees);
 
   RefStats();
   RefCleanup();
