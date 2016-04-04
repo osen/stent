@@ -38,4 +38,10 @@ size_t _AbortIfNotLess(size_t a, size_t b);
 #define ARRAY_AT(A, I) \
   GET(A)->data[_AbortIfNotLess(I, GET(A)->size)]
 
+REFDEF(String);
+
+REF(String) StringAllocCStr(char *str);
+void StringFree(REF(String) ctx);
+char *StringCStr(REF(String) ctx);
+
 #endif
