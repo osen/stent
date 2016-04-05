@@ -45,6 +45,23 @@ int main(int argc, char *argv[])
   employees = ARRAY_ALLOC(Employee);
   ARRAY_ADD(employees, employee);
   ARRAY_ADD(employees, CALLOC(Employee));
+  ARRAY_ADD(employees, employee);
+  ARRAY_ADD(employees, employee);
+  ARRAY_ADD(employees, employee);
+  ARRAY_ADD(employees, employee);
+  ARRAY_ADD(employees, employee);
+  ARRAY_ADD(employees, employee);
+  ARRAY_ADD(employees, employee);
+  ARRAY_ADD(employees, employee);
+
+  ARRAY_REMOVEAT(employees, ARRAY_SIZE(employees) - 1);
+  ARRAY_REMOVEAT(employees, 2);
+  ARRAY_REMOVEAT(employees, 2);
+  ARRAY_REMOVEAT(employees, 2);
+  ARRAY_REMOVEAT(employees, 2);
+  ARRAY_REMOVEAT(employees, 2);
+  ARRAY_REMOVEAT(employees, 2);
+  ARRAY_REMOVEAT(employees, 2);
 
   print_employees(employees);
 

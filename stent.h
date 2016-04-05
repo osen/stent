@@ -3,6 +3,7 @@
 
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define REF(T) \
   struct T##Ref
@@ -113,5 +114,19 @@ size_t _AbortIfNotLess(size_t a, size_t b);
 
 #define ARRAY_AT(A, I) \
   GET(A)->data[_AbortIfNotLess(I, GET(A)->size)]
+
+#define ARRAY_REMOVEAT(A, I) \
+  do \
+  { \
+    int ri = 0; \
+    ri = I; \
+    _AbortIfNotLess(ri, GET(A)->size); \
+    if(ri != GET(A)->size - 1) \
+    { \
+      memmove(GET(A)->data + ri, GET(A)->data + (ri + 1), sizeof(*GET(A)->data) * (GET(A)->size - (ri + 1))); \
+    } \
+    GET(A)->size--; \
+  } \
+  while(0)
 
 #endif
