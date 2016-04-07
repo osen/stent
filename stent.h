@@ -82,13 +82,13 @@ void RefCleanup();
 
 size_t _AbortIfNotLess(size_t a, size_t b);
 
-#define ARRAY(T) \
+#define REF_ARRAY(T) \
   struct _##T##ArrayRef
 
-#define ARRAY_ALLOC(T) \
+#define REF_ARRAY_ALLOC(T) \
   *((struct _##T##ArrayRef*)_RefCalloc(sizeof(struct _##T##Array), "struct "#T"[]", __FILE__, __LINE__))
 
-#define ARRAY_FREE(A) \
+#define REF_ARRAY_FREE(A) \
   do \
   { \
     if(GET(A) == NULL) break; \
@@ -97,7 +97,7 @@ size_t _AbortIfNotLess(size_t a, size_t b);
   } \
   while(0)
 
-#define ARRAY_ADD(A, E) \
+#define REF_ARRAY_ADD(A, E) \
   do \
   { \
     void *tmp = NULL; \
@@ -109,13 +109,13 @@ size_t _AbortIfNotLess(size_t a, size_t b);
   } \
   while(0)
 
-#define ARRAY_SIZE(A) \
+#define REF_ARRAY_SIZE(A) \
   GET(A)->size
 
-#define ARRAY_AT(A, I) \
+#define REF_ARRAY_AT(A, I) \
   GET(A)->data[_AbortIfNotLess(I, GET(A)->size)]
 
-#define ARRAY_REMOVEAT(A, I) \
+#define REF_ARRAY_REMOVEAT(A, I) \
   do \
   { \
     int ri = 0; \
