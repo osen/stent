@@ -35,6 +35,14 @@ struct Object
 };
 
 REFDEF(Object);
+
+struct Exception
+{
+  int errorCode;
+  char *message;
+};
+
+REFDEF(Exception);
  
 REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line);
 void _RefFree(REF(Object) *ref);
@@ -61,7 +69,7 @@ void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)));
   { \
     if((void(*)())R.get != (void(*)())_RefGet) \
     { \
-      abort(); \
+      break; \
     } \
     _RefFree((REF(Object)*)&R); \
   } \
