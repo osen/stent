@@ -9,11 +9,17 @@ struct String
   size_t length;
 };
 
+void StringFree(REF(String) ctx)
+{
+  free(GET(ctx)->data);
+}
+
 REF(String) StringAllocCStr(char *str)
 {
   REF(String) rtn = {};
 
   rtn = CALLOC(String);
+  FINALIZER(rtn, StringFree);
   GET(rtn)->length = strlen(str);
   GET(rtn)->data = calloc(GET(rtn)->length + 1, sizeof(char));
 
@@ -58,12 +64,6 @@ void StringAddInt(REF(String) ctx, int add)
   strcat(GET(ctx)->data, str);
 }
 
-void StringFree(REF(String) ctx)
-{
-  free(GET(ctx)->data);
-  FREE(ctx);
-}
-
 char *StringCStr(REF(String) ctx)
 {
   return GET(ctx)->data;
@@ -95,6 +95,16 @@ struct InputFile
   int eof;
 };
 
+void InputFileClose(REF(InputFile) ctx)
+{
+  if(GET(ctx)->file != NULL)
+  {
+    fclose(GET(ctx)->file);
+  }
+
+  FREE(GET(ctx)->buffer);
+}
+
 static void InputFileUpdateBuffer(REF(InputFile) ctx)
 {
   char buffer[128] = {};
@@ -112,7 +122,7 @@ static void InputFileUpdateBuffer(REF(InputFile) ctx)
     {
       if(StringLength(GET(ctx)->buffer) == 0)
       {
-        StringFree(GET(ctx)->buffer);
+        FREE(GET(ctx)->buffer);
       }
 
       return;
@@ -137,6 +147,7 @@ REF(InputFile) InputFileOpen(char *path)
   REF(InputFile) rtn = {};
 
   rtn = CALLOC(InputFile);
+  FINALIZER(rtn, InputFileClose);
 
   GET(rtn)->file = fopen(path, "r");
 
@@ -151,18 +162,6 @@ REF(InputFile) InputFileOpen(char *path)
   InputFileUpdateBuffer(rtn);
 
   return rtn;
-}
-
-void InputFileClose(REF(InputFile) ctx)
-{
-  fclose(GET(ctx)->file);
-
-  if(GET(GET(ctx)->buffer) != NULL)
-  {
-    StringFree(GET(ctx)->buffer);
-  }
-
-  FREE(ctx);
 }
 
 int InputFileEof(REF(InputFile) ctx)

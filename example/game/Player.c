@@ -16,6 +16,7 @@ REF(Player) PlayerCreate()
   REF(Player) rtn = {};
 
   rtn = CALLOC(Player);
+  FINALIZER(rtn, PlayerDestroy);
   GET(rtn)->health = 100;
   GET(rtn)->weapon = WeaponCreate(rtn);
 
@@ -24,8 +25,7 @@ REF(Player) PlayerCreate()
 
 void PlayerDestroy(REF(Player) ctx)
 {
-  WeaponDestroy(GET(ctx)->weapon);
-  FREE(ctx);
+  FREE(GET(ctx)->weapon);
 }
 
 void PlayerSetTarget(REF(Player) ctx, REF(Player) target)

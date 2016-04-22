@@ -6,7 +6,6 @@
 REFDEF(String);
 
 REF(String) StringAllocCStr(char *str);
-void StringFree(REF(String) ctx);
 char *StringCStr(REF(String) ctx);
 void StringAddChar(REF(String) ctx, char c);
 void StringClear(REF(String) ctx);
@@ -19,7 +18,6 @@ void StringAddInt(REF(String) ctx, int add);
 REFDEF(InputFile);
 
 REF(InputFile) InputFileOpen(char *path);
-void InputFileClose(REF(InputFile) ctx);
 int InputFileEof(REF(InputFile) ctx);
 void InputFileReadLine(REF(InputFile) ctx, REF(String) out);
 

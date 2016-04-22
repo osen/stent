@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
   printf("Username: %s\n", StringCStr(username));
 
   printf("String data (before free): %p\n", GET(username));
-  StringFree(username);
+  FREE(username);
   printf("String data (after free): %p\n", GET(username));
 
   RefStats();

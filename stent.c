@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MAX_REFS 2048
-
 struct RefData
 {
   void *ptr;
@@ -13,44 +11,21 @@ struct RefData
   char *type;
   char *file;
   int line;
+  void (*finalizer)(REF(Object));
 };
 
-struct RefObject _refObject;
-struct RefData *_refs[MAX_REFS];
+REF(Object) _refObject;
+
+struct RefData **_refs;
+size_t _refCount;
+
 time_t _refTime;
 int _refUnique;
 
-void _RefRelease(void *ptr)
-{
-  int i = 0;
-  struct RefData *refData = NULL;
-
-  for(i = 0; i < MAX_REFS; i++)
-  {
-    refData = _refs[i];
-
-    if(refData == NULL)
-    {
-      break;
-    }
-
-    if(refData->ptr == NULL)
-    {
-      continue;
-    }
-
-    if(refData->ptr == ptr)
-    {
-      refData->ptr = NULL;
-      return;
-    }
-  }
-}
-
-void _RefFree(struct RefObject *ref)
+void _RefFree(REF(Object) *ref)
 {
   struct RefData *refData = NULL;
-  struct RefObject _ref = *ref;
+  REF(Object) _ref = *ref;
 
   if(GET(_ref) == NULL)
   {
@@ -58,6 +33,11 @@ void _RefFree(struct RefObject *ref)
   }
 
   refData = _refs[ref->idx];
+
+  if(refData->finalizer != NULL)
+  {
+    refData->finalizer(_ref);
+  }
 
   free(refData->ptr);
   refData->ptr = NULL;
@@ -68,7 +48,7 @@ void RefStats()
   int i = 0;
   struct RefData *refData = NULL;
 
-  for(i = 0; i < MAX_REFS; i++)
+  for(i = 0; i < _refCount; i++)
   {
     refData = _refs[i];
 
@@ -95,7 +75,7 @@ void RefCleanup()
   int i = 0;
   struct RefData *refData = NULL;
 
-  for(i = 0; i < MAX_REFS; i++)
+  for(i = 0; i < _refCount; i++)
   {
     refData = _refs[i];
 
@@ -109,13 +89,20 @@ void RefCleanup()
     free(refData);
     _refs[i] = NULL;
   }
+
+  free(_refs);
+  _refs = NULL;
+  _refCount = 0;
 }
 
-struct RefObject *_RefPlace(void *ptr, char *type, char *file, int line)
+REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line)
 {
-  int i = 0;
+  size_t i = 0;
   struct RefData *refData = NULL;
   time_t currentTime = 0;
+  void *ptr = NULL;
+
+  ptr = calloc(1, size);
 
   if(ptr == NULL)
   {
@@ -124,7 +111,13 @@ struct RefObject *_RefPlace(void *ptr, char *type, char *file, int line)
     return &_refObject;
   }
 
-  for(i = 0; i < MAX_REFS; i++)
+  if(_refs == NULL)
+  {
+    _refs = calloc(32, sizeof(*_refs));
+    _refCount = 32;
+  }
+
+  for(i = 0; i < _refCount; i++)
   {
     if(_refs[i] == NULL)
     {
@@ -144,8 +137,12 @@ struct RefObject *_RefPlace(void *ptr, char *type, char *file, int line)
 
   if(refData == NULL)
   {
-    printf("Error: Max references reached\n");
-    abort();
+    _refs = realloc(_refs, (_refCount * 2) * sizeof(*_refs));
+    memset(_refs + _refCount, 0, _refCount * sizeof(*_refs));
+    i = _refCount;
+    _refCount *= 2;
+    refData = calloc(1, sizeof(struct RefData));
+    _refs[i] = refData;
   }
 
   time(&currentTime);
@@ -162,11 +159,13 @@ struct RefObject *_RefPlace(void *ptr, char *type, char *file, int line)
   refData->type = strdup(type);
   refData->file = strdup(file);
   refData->line = line;
+  refData->finalizer = NULL;
 
   _refUnique++;
 
   _refObject.idx = i;
-  _refObject.get = _RefGet;
+  *(void **)(&_refObject.get) = _RefGet;
+  *(void **)(&_refObject.finalizer) = _RefFinalizer;
   _refObject.ptr = refData->ptr;
   _refObject.unique = refData->unique;
   _refObject.time = refData->time;
@@ -174,64 +173,27 @@ struct RefObject *_RefPlace(void *ptr, char *type, char *file, int line)
   return &_refObject;
 }
 
-struct RefObject *_RefAttach(void *ptr, char *type, char *file, int line, int mustExist)
+void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)))
 {
-  int i = 0;
   struct RefData *refData = NULL;
-  int checkType = 0;
 
-  if(strcmp(type, "?") != 0)
+  if(GET(obj) == NULL)
   {
-    checkType = 1;
+    return;
   }
 
-  for(i = 0; i < MAX_REFS; i++)
-  {
-    if(_refs[i] == NULL)
-    {
-      break;
-    }
-
-    if(_refs[i]->ptr == ptr)
-    {
-      refData = _refs[i];
-
-      if(checkType == 1)
-      {
-        if(strcmp(refData->type, type) != 0)
-        {
-          break;
-        }
-      }
-
-      _refObject.idx = i;
-      _refObject.get = _RefGet;
-      _refObject.ptr = refData->ptr;
-      _refObject.unique = refData->unique;
-      _refObject.time = refData->time;
-
-      return &_refObject;
-    }
-  }
-
-  if(mustExist == 1)
-  {
-    memset(&_refObject, 0, sizeof(_refObject));
-
-    return &_refObject;
-  }
-
-  return _RefPlace(ptr, type, file, line);
-}
-
-struct RefObject *_RefCalloc(size_t size, char *type, char *file, int line)
-{
-  return _RefPlace(calloc(1, size), type, file, line);
+  refData = _refs[obj.idx];
+  refData->finalizer = finalizer;
 }
 
 void *_RefGet(int idx, void *ptr, int unique, time_t time)
 {
   struct RefData *refData = NULL;
+
+  if(idx >= _refCount)
+  {
+    return NULL;
+  }
 
   refData = _refs[idx];
 
@@ -251,6 +213,20 @@ void *_RefGet(int idx, void *ptr, int unique, time_t time)
   }
 
   return refData->ptr;
+}
+
+void ArrayFinalizer(ARRAY(Object) obj)
+{
+  if(GET(obj)->data) free(GET(obj)->data);
+}
+
+REF(Object) *_AddArrayFinalizer(REF(Object) *ctx)
+{
+  ARRAY(Object) arr = *((ARRAY(Object)*)ctx);
+
+  FINALIZER(arr, ArrayFinalizer);
+
+  return ctx;
 }
 
 size_t _AbortIfNotLess(size_t a, size_t b)

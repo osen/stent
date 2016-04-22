@@ -14,6 +14,7 @@ REF(Weapon) WeaponCreate(REF(Player) owner)
   REF(Weapon) rtn = {};
 
   rtn = CALLOC(Weapon);
+  FINALIZER(rtn, WeaponDestroy);
   GET(rtn)->owner = owner;
   GET(rtn)->ammo = 50;
 
@@ -22,5 +23,4 @@ REF(Weapon) WeaponCreate(REF(Player) owner)
 
 void WeaponDestroy(REF(Weapon) ctx)
 {
-  FREE(ctx);
 }
