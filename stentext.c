@@ -14,6 +14,16 @@ void StringFree(REF(String) ctx)
   free(GET(ctx)->data);
 }
 
+REF(String) StringEmpty()
+{
+  REF(String) rtn = {};
+
+  rtn = CALLOC(String);
+  FINALIZER(rtn, StringFree);
+
+  return rtn;
+}
+
 REF(String) StringAllocCStr(char *str)
 {
   REF(String) rtn = {};
@@ -166,7 +176,7 @@ REF(InputFile) InputFileOpen(char *path)
 
 int InputFileEof(REF(InputFile) ctx)
 {
-  if(GET(GET(ctx)->buffer) == NULL)
+  if(TRYGET(GET(ctx)->buffer) == NULL)
   {
     return 1;
   }

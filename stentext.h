@@ -6,6 +6,7 @@
 REFDEF(String);
 
 REF(String) StringAllocCStr(char *str);
+REF(String) StringEmpty();
 char *StringCStr(REF(String) ctx);
 void StringAddChar(REF(String) ctx, char c);
 void StringClear(REF(String) ctx);
