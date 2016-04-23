@@ -9,7 +9,7 @@ struct Test
 
 void safe_main(REF(Object) userData)
 {
-  //THROW(0, "Something exceptional has happened");
+  THROW(0, "Something exceptional has happened");
 }
 
 int main(int argc, char *argv[])
@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
   test = CALLOC(Test);
 
   //exception = TRY(safe_main, CAST(Object, test));
+  THROW(0, "Something exceptional has happened");
 
   FREE(exception);
   FREE(test);

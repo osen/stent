@@ -231,10 +231,10 @@ REF(Object) *_AddArrayFinalizer(REF(Object) *ctx)
 
 size_t _AbortIfNotLess(size_t a, size_t b)
 {
-  if(a < b)
+  if(a >= b)
   {
-    return a;
+    THROW(0, "Attempted out of bounds array access");
   }
 
-  abort();
+  return a;
 }

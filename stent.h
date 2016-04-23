@@ -4,6 +4,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #define REF(T) \
   struct T##Ref
@@ -43,6 +44,18 @@ struct Exception
 };
 
 REFDEF(Exception);
+
+//
+// Exception support
+//
+
+#define THROW(C, M) \
+  do \
+  { \
+    printf("Exception (%i): %s\n", C, M); \
+    abort(); \
+  } \
+  while(0)
  
 REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line);
 void _RefFree(REF(Object) *ref);
@@ -59,7 +72,7 @@ void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)));
 #define FINALIZER(R, F) \
   do \
   { \
-    if(R.finalizer == NULL) abort(); \
+    if(R.finalizer == NULL) THROW(0, "Attempt to set finalizer on NULL pointer"); \
     R.finalizer(R, F); \
   } \
   while(0)
@@ -96,7 +109,7 @@ size_t _AbortIfNotLess(size_t a, size_t b);
   { \
     void *tmp = NULL; \
     tmp = realloc(GET(A)->data, sizeof(*GET(A)->data) * (GET(A)->size + 1)); \
-    if(tmp == NULL) abort(); \
+    if(tmp == NULL) THROW(0, "Failed to increase size of array"); \
     GET(A)->data = tmp; \
     GET(A)->data[GET(A)->size] = E; \
     GET(A)->size++; \
