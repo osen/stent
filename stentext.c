@@ -21,6 +21,8 @@ REF(String) StringEmpty()
   rtn = CALLOC(String);
   FINALIZER(rtn, StringFree);
 
+  GET(rtn)->data = calloc(GET(rtn)->length + 1, sizeof(char));
+
   return rtn;
 }
 
