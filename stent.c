@@ -27,7 +27,7 @@ void _RefFree(REF(Object) *ref)
   struct RefData *refData = NULL;
   REF(Object) _ref = *ref;
 
-  if(GET(_ref) == NULL)
+  if(TRYGET(_ref) == NULL)
   {
     return;
   }
@@ -186,12 +186,13 @@ void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)))
   refData->finalizer = finalizer;
 }
 
-void *_RefGet(int idx, void *ptr, int unique, time_t time)
+void *_RefGet(int idx, void *ptr, int unique, time_t time, int throws)
 {
   struct RefData *refData = NULL;
 
   if(idx >= _refCount)
   {
+    if(throws == 1) goto invalid;
     return NULL;
   }
 
@@ -199,20 +200,26 @@ void *_RefGet(int idx, void *ptr, int unique, time_t time)
 
   if(refData->ptr != ptr)
   {
+    if(throws == 1) goto invalid;
     return NULL;
   }
 
   if(refData->unique != unique)
   {
+    if(throws == 1) goto invalid;
     return NULL;
   }
 
   if(refData->time != time)
   {
+    if(throws == 1) goto invalid;
     return NULL;
   }
 
   return refData->ptr;
+
+invalid:
+  THROW(0, "Reference is no longer valid");
 }
 
 void ArrayFinalizer(ARRAY(Object) obj)

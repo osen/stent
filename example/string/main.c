@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 
   printf("String data (before free): %p\n", GET(username));
   FREE(username);
-  printf("String data (after free): %p\n", GET(username));
+  printf("String data (after free): %p\n", TRYGET(username));
 
   RefStats();
   RefCleanup();

@@ -20,11 +20,11 @@ int main(int argc, char* argv[])
   printf("Weapon: %p\n", GET(weapon));
 
   FREE(enemy);
-  printf("Player Target: %p\n", GET(PlayerTarget(player)));
+  printf("Player Target: %p\n", TRYGET(PlayerTarget(player)));
   FREE(player);
 
-  printf("Player: %p\n", GET(player));
-  printf("Weapon: %p\n", GET(weapon));
+  printf("Player: %p\n", TRYGET(player));
+  printf("Weapon: %p\n", TRYGET(weapon));
 
   RefStats();
   RefCleanup();

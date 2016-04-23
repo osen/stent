@@ -26,7 +26,7 @@
     struct T *ptr; \
     int unique; \
     time_t time; \
-    struct T *(*get)(int, void*, int, time_t); \
+    struct T *(*get)(int, void*, int, time_t, int); \
     void (*finalizer)(REF(T), void (*)(REF(T))); \
   };
 
@@ -60,11 +60,14 @@ REFDEF(Exception);
 REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line);
 void _RefFree(REF(Object) *ref);
 
-void *_RefGet(int idx, void *ptr, int unique, time_t time);
+void *_RefGet(int idx, void *ptr, int unique, time_t time, int throws);
 void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)));
 
 #define GET(R) \
-  (((void(*)())R.get != (void(*)())_RefGet) ? NULL : R.get(R.idx, R.ptr, R.unique, R.time))
+  (((void(*)())R.get != (void(*)())_RefGet) ? NULL : R.get(R.idx, R.ptr, R.unique, R.time, 1))
+
+#define TRYGET(R) \
+  (((void(*)())R.get != (void(*)())_RefGet) ? NULL : R.get(R.idx, R.ptr, R.unique, R.time, 0))
 
 #define CALLOC(T) \
   *((struct T##Ref*)_RefCalloc(sizeof(struct T), "struct "#T, __FILE__, __LINE__))
