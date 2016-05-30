@@ -186,31 +186,31 @@ void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)))
   refData->finalizer = finalizer;
 }
 
-void *_RefGet(int idx, void *ptr, int unique, time_t time, int throws)
+void *_RefGet(REF(Object) obj, int throws)
 {
   struct RefData *refData = NULL;
 
-  if(idx >= _refCount)
+  if(obj.idx >= _refCount)
   {
     if(throws == 1) goto invalid;
     return NULL;
   }
 
-  refData = _refs[idx];
+  refData = _refs[obj.idx];
 
-  if(refData->ptr != ptr)
+  if(refData->ptr != obj.ptr)
   {
     if(throws == 1) goto invalid;
     return NULL;
   }
 
-  if(refData->unique != unique)
+  if(refData->unique != obj.unique)
   {
     if(throws == 1) goto invalid;
     return NULL;
   }
 
-  if(refData->time != time)
+  if(refData->time != obj.time)
   {
     if(throws == 1) goto invalid;
     return NULL;
