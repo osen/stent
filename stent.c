@@ -164,6 +164,7 @@ REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line)
   _refUnique++;
 
   _refObject.idx = i;
+  *(void **)(&_refObject.cast) = _RefCast;
   *(void **)(&_refObject.get) = _RefGet;
   *(void **)(&_refObject.finalizer) = _RefFinalizer;
   _refObject.ptr = refData->ptr;
@@ -184,6 +185,31 @@ void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)))
 
   refData = _refs[obj.idx];
   refData->finalizer = finalizer;
+}
+
+void *_RefCast(REF(Object) obj, char *type)
+{
+  struct RefData *refData = NULL;
+
+  if(GET(obj) == NULL)
+  {
+    THROW(0, "Reference is no longer valid");
+  }
+
+  refData = _refs[obj.idx];
+  _refObject = obj;
+
+  if(strcmp(type, "struct Object") == 0)
+  {
+    return &_refObject;
+  }
+
+  if(strcmp(type, refData->type) != 0)
+  {
+    THROW(0, "Invalid cast type");
+  }
+
+  return &_refObject;
 }
 
 void *_RefGet(REF(Object) obj, int throws)

@@ -28,6 +28,7 @@
     time_t time; \
     struct T *(*get)(REF(T), int); \
     void (*finalizer)(REF(T), void (*)(REF(T))); \
+    void *(*cast)(REF(T) obj, char *type); \
   };
 
 struct Object
@@ -62,6 +63,10 @@ void _RefFree(REF(Object) *ref);
 
 void *_RefGet(REF(Object) obj, int throws);
 void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)));
+void *_RefCast(REF(Object) obj, char *type);
+
+#define CAST(T, R) \
+  *((struct T##Ref*)R.cast(R, "struct "#T))
 
 #define GET(R) \
   (((void(*)())R.get != (void(*)())_RefGet) ? NULL : R.get(R, 1))
