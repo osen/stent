@@ -29,6 +29,7 @@
     struct T *(*get)(REF(T), int); \
     void (*finalizer)(REF(T), void (*)(REF(T))); \
     void *(*cast)(REF(T) obj, char *type); \
+    REF(Exception) (*try)(void (*func)(REF(T)), REF(T) userData); \
   };
 
 struct Object
@@ -42,6 +43,8 @@ struct Exception
 {
   int errorCode;
   char *message;
+  char *file;
+  int line;
 };
 
 REFDEF(Exception);
@@ -53,17 +56,22 @@ REFDEF(Exception);
 #define THROW(C, M) \
   do \
   { \
-    printf("Exception (%i): %s\n", C, M); \
+    _RefThrow(C, M, __FILE__, __LINE__); \
     abort(); \
   } \
   while(0)
  
 REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line);
 void _RefFree(REF(Object) *ref);
+void _RefThrow(int code, char *message, char *file, int line);
 
 void *_RefGet(REF(Object) obj, int throws);
 void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)));
 void *_RefCast(REF(Object) obj, char *type);
+REF(Exception) _RefTry(void (*func)(REF(Object)), REF(Object) userData);
+
+#define TRY(F, R) \
+  R.try(F, R)
 
 #define CAST(T, R) \
   *((struct T##Ref*)R.cast(R, "struct "#T))

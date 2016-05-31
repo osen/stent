@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <setjmp.h>
 
 struct RefData
 {
@@ -21,6 +22,40 @@ size_t _refCount;
 
 time_t _refTime;
 int _refUnique;
+
+struct ExceptionData
+{
+  jmp_buf buf;
+  int code;
+  char *message;
+  char *file;
+  int line;
+};
+
+struct ExceptionData *_refExceptionStack;
+size_t _refExceptionStackCount;
+size_t _refExceptionStackLocation;
+
+void _RefThrow(int code, char *message, char *file, int line)
+{
+  struct ExceptionData *exceptionData = NULL;
+
+  if(_refExceptionStackLocation <= 0)
+  {
+    printf("Unhandled Exception (%i): %s\nFILE: %s\nLINE: %i\n",
+      code, message, file, line);
+
+    abort();
+  }
+
+  exceptionData = &_refExceptionStack[_refExceptionStackLocation - 1];
+
+  exceptionData->code = code;
+  exceptionData->message = strdup(message);
+  exceptionData->file = file;
+  exceptionData->line = line;
+  longjmp(exceptionData->buf, 1);
+}
 
 void _RefFree(REF(Object) *ref)
 {
@@ -93,6 +128,11 @@ void RefCleanup()
   free(_refs);
   _refs = NULL;
   _refCount = 0;
+
+  _refExceptionStackCount = 0;
+  _refExceptionStackLocation = 0;
+  free(_refExceptionStack);
+  _refExceptionStack = NULL;
 }
 
 REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line)
@@ -167,11 +207,61 @@ REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line)
   *(void **)(&_refObject.cast) = _RefCast;
   *(void **)(&_refObject.get) = _RefGet;
   *(void **)(&_refObject.finalizer) = _RefFinalizer;
+  *(void **)(&_refObject.try) = _RefTry;
   _refObject.ptr = refData->ptr;
   _refObject.unique = refData->unique;
   _refObject.time = refData->time;
 
   return &_refObject;
+}
+
+void _RefExceptionFinalizer(REF(Exception) ctx)
+{
+  if(GET(ctx)->message)
+  {
+    free(GET(ctx)->message);
+  }
+
+  if(GET(ctx)->file)
+  {
+    free(GET(ctx)->file);
+  }
+}
+
+REF(Exception) _RefTry(void (*func)(REF(Object)), REF(Object) userData)
+{
+  REF(Exception) rtn = {};
+  struct ExceptionData *exceptionData = NULL;
+
+  _refExceptionStackLocation++;
+
+  if(_refExceptionStackLocation >= _refExceptionStackCount)
+  {
+    _refExceptionStack = realloc(_refExceptionStack,
+      _refExceptionStackLocation * sizeof(*_refExceptionStack));
+ 
+    _refExceptionStackCount = _refExceptionStackLocation;
+  }
+
+  exceptionData = &_refExceptionStack[_refExceptionStackLocation - 1];
+
+  if(setjmp(exceptionData->buf) == 0)
+  {
+    func(userData);
+  }
+  else
+  {
+    rtn = CALLOC(Exception);
+    FINALIZER(rtn, _RefExceptionFinalizer);
+    GET(rtn)->message = exceptionData->message;
+    GET(rtn)->errorCode = exceptionData->code;
+    GET(rtn)->file = strdup(exceptionData->file);
+    GET(rtn)->line = exceptionData->line;
+  }
+
+  _refExceptionStackLocation--;
+
+  return rtn;
 }
 
 void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)))

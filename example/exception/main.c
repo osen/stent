@@ -13,12 +13,12 @@ struct InvalidTest
   char b;
 };
 
-void safe_main(REF(Object) userData)
+void safe_main(REF(Test) userData)
 {
   //REF(InvalidTest) test = CAST(InvalidTest, userData);
-  REF(Test) test = CAST(Test, userData);
+  //REF(Test) test = CAST(Test, userData);
 
-  printf("Result: %p\n", GET(test));
+  printf("Result: %p\n", GET(userData));
 
   THROW(0, "Something exceptional has happened");
 }
@@ -31,12 +31,12 @@ int main(int argc, char *argv[])
   test = CALLOC(Test);
 
   //THROW(0, "Something exceptional has happened");
-  safe_main(CAST(Object, test));
-  //exception = TRY(safe_main, CAST(Object, test));
+  //safe_main(CAST(Object, test));
+  exception = TRY(safe_main, test);
 
   if(TRYGET(exception) != NULL)
   {
-    printf("There was an exception\n");
+    printf("%s\n", GET(exception)->message);
     FREE(exception);
   }
 
