@@ -16,14 +16,6 @@ struct RefData
   int exceptionLevel;
 };
 
-REF(Object) _refObject;
-
-struct RefData **_refs;
-size_t _refCount;
-
-time_t _refTime;
-int _refUnique;
-
 struct ExceptionData
 {
   jmp_buf buf;
@@ -33,9 +25,17 @@ struct ExceptionData
   int line;
 };
 
-struct ExceptionData *_refExceptionStack;
-size_t _refExceptionStackCount;
-size_t _refExceptionStackLocation;
+static struct
+{
+  REF(Object) tempObject;
+  time_t currentTime;
+  int unique;
+  struct RefData **refs;
+  size_t refCount;
+  size_t exceptionStackCount;
+  size_t exceptionStackLocation;
+  struct ExceptionData *exceptionStack;
+} stent;
 
 int _RefThrowIfNotFunc(void(*a)(), void(*b)())
 {
@@ -51,7 +51,7 @@ void _RefThrow(int code, char *message, char *file, int line)
 {
   struct ExceptionData *exceptionData = NULL;
 
-  if(_refExceptionStackLocation <= 0)
+  if(stent.exceptionStackLocation <= 0)
   {
     printf("Unhandled Exception (%i): %s\nFILE: %s\nLINE: %i\n",
       code, message, file, line);
@@ -59,7 +59,7 @@ void _RefThrow(int code, char *message, char *file, int line)
     abort();
   }
 
-  exceptionData = &_refExceptionStack[_refExceptionStackLocation - 1];
+  exceptionData = &stent.exceptionStack[stent.exceptionStackLocation - 1];
 
   exceptionData->code = code;
   exceptionData->message = message;
@@ -78,7 +78,7 @@ void _RefFree(REF(Object) *ref)
     return;
   }
 
-  refData = _refs[_ref.idx];
+  refData = stent.refs[_ref.idx];
 
   if(refData->finalizer != NULL)
   {
@@ -94,9 +94,9 @@ void RefStats()
   int i = 0;
   struct RefData *refData = NULL;
 
-  for(i = 0; i < _refCount; i++)
+  for(i = 0; i < stent.refCount; i++)
   {
-    refData = _refs[i];
+    refData = stent.refs[i];
 
     if(refData == NULL)
     {
@@ -121,9 +121,9 @@ void RefCleanup()
   int i = 0;
   struct RefData *refData = NULL;
 
-  for(i = 0; i < _refCount; i++)
+  for(i = 0; i < stent.refCount; i++)
   {
-    refData = _refs[i];
+    refData = stent.refs[i];
 
     if(refData == NULL)
     {
@@ -133,43 +133,37 @@ void RefCleanup()
     free(refData->type);
     free(refData->file);
     free(refData);
-    _refs[i] = NULL;
   }
 
-  free(_refs);
-  _refs = NULL;
-  _refCount = 0;
-
-  _refExceptionStackCount = 0;
-  _refExceptionStackLocation = 0;
-  free(_refExceptionStack);
-  _refExceptionStack = NULL;
+  free(stent.refs);
+  free(stent.exceptionStack);
+  memset(&stent, 0, sizeof(stent));
 }
 
 REF(Object) *_RefFromRefData(int idx)
 {
-  memset(&_refObject, 0, sizeof(_refObject));
+  memset(&stent.tempObject, 0, sizeof(stent.tempObject));
 
-  if(idx >= _refCount)
+  if(idx >= stent.refCount)
   {
-    return &_refObject;
+    return &stent.tempObject;
   }
 
-  if(_refs[idx] == NULL)
+  if(stent.refs[idx] == NULL)
   {
-    return &_refObject;
+    return &stent.tempObject;
   }
 
-  _refObject.idx = idx;
-  *(void **)(&_refObject.cast) = _RefCast;
-  *(void **)(&_refObject.get) = _RefGet;
-  *(void **)(&_refObject.finalizer) = _RefFinalizer;
-  *(void **)(&_refObject.try) = _RefTry;
-  _refObject.ptr = _refs[idx]->ptr;
-  _refObject.unique = _refs[idx]->unique;
-  _refObject.time = _refs[idx]->time;
+  stent.tempObject.idx = idx;
+  *(void **)(&stent.tempObject.cast) = _RefCast;
+  *(void **)(&stent.tempObject.get) = _RefGet;
+  *(void **)(&stent.tempObject.finalizer) = _RefFinalizer;
+  *(void **)(&stent.tempObject.try) = _RefTry;
+  stent.tempObject.ptr = stent.refs[idx]->ptr;
+  stent.tempObject.unique = stent.refs[idx]->unique;
+  stent.tempObject.time = stent.refs[idx]->time;
 
-  return &_refObject;
+  return &stent.tempObject;
 }
 
 REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line)
@@ -183,29 +177,29 @@ REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line)
 
   if(ptr == NULL)
   {
-    memset(&_refObject, 0, sizeof(_refObject));
+    memset(&stent.tempObject, 0, sizeof(stent.tempObject));
 
-    return &_refObject;
+    return &stent.tempObject;
   }
 
-  if(_refs == NULL)
+  if(stent.refs == NULL)
   {
-    _refs = calloc(32, sizeof(*_refs));
-    _refCount = 32;
+    stent.refs = calloc(32, sizeof(*stent.refs));
+    stent.refCount = 32;
   }
 
-  for(i = 0; i < _refCount; i++)
+  for(i = 0; i < stent.refCount; i++)
   {
-    if(_refs[i] == NULL)
+    if(stent.refs[i] == NULL)
     {
       refData = calloc(1, sizeof(struct RefData));
-      _refs[i] = refData;
+      stent.refs[i] = refData;
       break;
     }
 
-    if(_refs[i]->ptr == NULL)
+    if(stent.refs[i]->ptr == NULL)
     {
-      refData = _refs[i];
+      refData = stent.refs[i];
       if(refData->file) free(refData->file);
       if(refData->type) free(refData->type);
       break;
@@ -214,32 +208,36 @@ REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line)
 
   if(refData == NULL)
   {
-    _refs = realloc(_refs, (_refCount * 2) * sizeof(*_refs));
-    memset(_refs + _refCount, 0, _refCount * sizeof(*_refs));
-    i = _refCount;
-    _refCount *= 2;
+    stent.refs = realloc(stent.refs,
+      (stent.refCount * 2) * sizeof(*stent.refs));
+
+    memset(stent.refs + stent.refCount, 0,
+      stent.refCount * sizeof(*stent.refs));
+
+    i = stent.refCount;
+    stent.refCount *= 2;
     refData = calloc(1, sizeof(struct RefData));
-    _refs[i] = refData;
+    stent.refs[i] = refData;
   }
 
   time(&currentTime);
 
-  if(currentTime != _refTime)
+  if(currentTime != stent.currentTime)
   {
-    _refTime = currentTime;
-    _refUnique = 0;
+    stent.currentTime = currentTime;
+    stent.unique = 0;
   }
 
   refData->ptr = ptr;
-  refData->unique = _refUnique;
-  refData->time = _refTime;
+  refData->unique = stent.unique;
+  refData->time = stent.currentTime;
   refData->type = strdup(type);
   refData->file = strdup(file);
   refData->line = line;
   refData->finalizer = NULL;
-  refData->exceptionLevel = _refExceptionStackLocation;
+  refData->exceptionLevel = stent.exceptionStackLocation;
 
-  _refUnique++;
+  stent.unique++;
 
   return _RefFromRefData(i);
 }
@@ -262,7 +260,7 @@ void _RefReleaseExceptionLevel(int exceptionLevel, int performFree)
   REF(Object) current = {};
   size_t i = 0;
 
-  for(i = 0; i < _refCount; i++)
+  for(i = 0; i < stent.refCount; i++)
   {
     current = *_RefFromRefData(i);
 
@@ -271,7 +269,7 @@ void _RefReleaseExceptionLevel(int exceptionLevel, int performFree)
       continue;
     }
 
-    if(_refs[i]->exceptionLevel == exceptionLevel)
+    if(stent.refs[i]->exceptionLevel == exceptionLevel)
     {
       if(performFree)
       {
@@ -279,39 +277,40 @@ void _RefReleaseExceptionLevel(int exceptionLevel, int performFree)
       }
       else
       {
-        _refs[i]->exceptionLevel--;
+        stent.refs[i]->exceptionLevel--;
       }
     }
   }
 }
 
-REF(Exception) _RefTry(void (*func)(REF(Object)), REF(Object) userData, int unused)
+REF(Exception) _RefTry(void (*func)(REF(Object)), REF(Object) userData,
+  int unused)
 {
   REF(Exception) rtn = {};
   struct ExceptionData *exceptionData = NULL;
 
-  _refExceptionStackLocation++;
+  stent.exceptionStackLocation++;
 
-  if(_refExceptionStackLocation >= _refExceptionStackCount)
+  if(stent.exceptionStackLocation >= stent.exceptionStackCount)
   {
-    _refExceptionStack = realloc(_refExceptionStack,
-      _refExceptionStackLocation * sizeof(*_refExceptionStack));
+    stent.exceptionStack = realloc(stent.exceptionStack,
+      stent.exceptionStackLocation * sizeof(*stent.exceptionStack));
  
-    _refExceptionStackCount = _refExceptionStackLocation;
+    stent.exceptionStackCount = stent.exceptionStackLocation;
   }
 
-  exceptionData = &_refExceptionStack[_refExceptionStackLocation - 1];
+  exceptionData = &stent.exceptionStack[stent.exceptionStackLocation - 1];
 
   if(setjmp(exceptionData->buf) == 0)
   {
     func(userData);
-    _RefReleaseExceptionLevel(_refExceptionStackLocation, 0);
-    _refExceptionStackLocation--;
+    _RefReleaseExceptionLevel(stent.exceptionStackLocation, 0);
+    stent.exceptionStackLocation--;
   }
   else
   {
-    _RefReleaseExceptionLevel(_refExceptionStackLocation, 1);
-    _refExceptionStackLocation--;
+    _RefReleaseExceptionLevel(stent.exceptionStackLocation, 1);
+    stent.exceptionStackLocation--;
     rtn = CALLOC(Exception);
     FINALIZER(rtn, _RefExceptionFinalizer);
     GET(rtn)->message = strdup(exceptionData->message);
@@ -332,7 +331,7 @@ void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)))
     THROW(0, "Failed to add finalizer because reference is no longer valid");
   }
 
-  refData = _refs[obj.idx];
+  refData = stent.refs[obj.idx];
   refData->finalizer = finalizer;
 }
 
@@ -345,12 +344,12 @@ void *_RefCast(REF(Object) obj, char *type, int unused)
     THROW(0, "Failed to cast because reference is no longer valid");
   }
 
-  refData = _refs[obj.idx];
-  _refObject = obj;
+  refData = stent.refs[obj.idx];
+  stent.tempObject = obj;
 
   if(strcmp(type, "struct Object") == 0)
   {
-    return &_refObject;
+    return &stent.tempObject;
   }
 
   if(strcmp(type, refData->type) != 0)
@@ -358,20 +357,20 @@ void *_RefCast(REF(Object) obj, char *type, int unused)
     THROW(0, "Invalid cast type");
   }
 
-  return &_refObject;
+  return &stent.tempObject;
 }
 
 void *_RefGet(REF(Object) obj, int throws, int unused)
 {
   struct RefData *refData = NULL;
 
-  if(obj.idx >= _refCount)
+  if(obj.idx >= stent.refCount)
   {
     if(throws == 1) goto invalid;
     return NULL;
   }
 
-  refData = _refs[obj.idx];
+  refData = stent.refs[obj.idx];
 
   if(refData->ptr != obj.ptr)
   {
