@@ -15,8 +15,9 @@ struct InvalidTest
 
 void safe_main(REF(Test) userData)
 {
-  //REF(InvalidTest) test = CAST(InvalidTest, userData);
-  //REF(Test) test = CAST(Test, userData);
+  REF(Test) tempTest = {};
+
+  tempTest = CALLOC(Test);
 
   printf("Result: %p\n", GET(userData));
 

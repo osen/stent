@@ -13,6 +13,7 @@ struct RefData
   char *file;
   int line;
   void (*finalizer)(REF(Object));
+  int exceptionLevel;
 };
 
 REF(Object) _refObject;
@@ -51,7 +52,7 @@ void _RefThrow(int code, char *message, char *file, int line)
   exceptionData = &_refExceptionStack[_refExceptionStackLocation - 1];
 
   exceptionData->code = code;
-  exceptionData->message = strdup(message);
+  exceptionData->message = message;
   exceptionData->file = file;
   exceptionData->line = line;
   longjmp(exceptionData->buf, 1);
@@ -59,15 +60,15 @@ void _RefThrow(int code, char *message, char *file, int line)
 
 void _RefFree(REF(Object) *ref)
 {
-  struct RefData *refData = NULL;
   REF(Object) _ref = *ref;
+  struct RefData *refData = NULL;
 
   if(TRYGET(_ref) == NULL)
   {
     return;
   }
 
-  refData = _refs[ref->idx];
+  refData = _refs[_ref.idx];
 
   if(refData->finalizer != NULL)
   {
@@ -135,6 +136,32 @@ void RefCleanup()
   _refExceptionStack = NULL;
 }
 
+REF(Object) *_RefFromRefData(int idx)
+{
+  memset(&_refObject, 0, sizeof(_refObject));
+
+  if(idx >= _refCount)
+  {
+    return &_refObject;
+  }
+
+  if(_refs[idx] == NULL)
+  {
+    return &_refObject;
+  }
+
+  _refObject.idx = idx;
+  *(void **)(&_refObject.cast) = _RefCast;
+  *(void **)(&_refObject.get) = _RefGet;
+  *(void **)(&_refObject.finalizer) = _RefFinalizer;
+  *(void **)(&_refObject.try) = _RefTry;
+  _refObject.ptr = _refs[idx]->ptr;
+  _refObject.unique = _refs[idx]->unique;
+  _refObject.time = _refs[idx]->time;
+
+  return &_refObject;
+}
+
 REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line)
 {
   size_t i = 0;
@@ -200,19 +227,11 @@ REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line)
   refData->file = strdup(file);
   refData->line = line;
   refData->finalizer = NULL;
+  refData->exceptionLevel = _refExceptionStackLocation;
 
   _refUnique++;
 
-  _refObject.idx = i;
-  *(void **)(&_refObject.cast) = _RefCast;
-  *(void **)(&_refObject.get) = _RefGet;
-  *(void **)(&_refObject.finalizer) = _RefFinalizer;
-  *(void **)(&_refObject.try) = _RefTry;
-  _refObject.ptr = refData->ptr;
-  _refObject.unique = refData->unique;
-  _refObject.time = refData->time;
-
-  return &_refObject;
+  return _RefFromRefData(i);
 }
 
 void _RefExceptionFinalizer(REF(Exception) ctx)
@@ -225,6 +244,34 @@ void _RefExceptionFinalizer(REF(Exception) ctx)
   if(GET(ctx)->file)
   {
     free(GET(ctx)->file);
+  }
+}
+
+void _RefReleaseExceptionLevel(int exceptionLevel, int performFree)
+{
+  REF(Object) current = {};
+  size_t i = 0;
+
+  for(i = 0; i < _refCount; i++)
+  {
+    current = *_RefFromRefData(i);
+
+    if(TRYGET(current) == NULL)
+    {
+      continue;
+    }
+
+    if(_refs[i]->exceptionLevel == exceptionLevel)
+    {
+      if(performFree)
+      {
+        FREE(current);
+      }
+      else
+      {
+        _refs[i]->exceptionLevel = 0;
+      }
+    }
   }
 }
 
@@ -248,18 +295,20 @@ REF(Exception) _RefTry(void (*func)(REF(Object)), REF(Object) userData)
   if(setjmp(exceptionData->buf) == 0)
   {
     func(userData);
+    _RefReleaseExceptionLevel(_refExceptionStackLocation, 0);
+    _refExceptionStackLocation--;
   }
   else
   {
+    _RefReleaseExceptionLevel(_refExceptionStackLocation, 1);
+    _refExceptionStackLocation--;
     rtn = CALLOC(Exception);
     FINALIZER(rtn, _RefExceptionFinalizer);
-    GET(rtn)->message = exceptionData->message;
+    GET(rtn)->message = strdup(exceptionData->message);
     GET(rtn)->errorCode = exceptionData->code;
     GET(rtn)->file = strdup(exceptionData->file);
     GET(rtn)->line = exceptionData->line;
   }
-
-  _refExceptionStackLocation--;
 
   return rtn;
 }
