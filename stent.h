@@ -26,10 +26,10 @@
     struct T *ptr; \
     int unique; \
     time_t time; \
-    struct T *(*get)(REF(T), int); \
+    struct T *(*get)(REF(T), int, int unused); \
     void (*finalizer)(REF(T), void (*)(REF(T))); \
-    void *(*cast)(REF(T) obj, char *type); \
-    REF(Exception) (*try)(void (*func)(REF(T)), REF(T) userData); \
+    void *(*cast)(REF(T) obj, char *type, int unused); \
+    REF(Exception) (*try)(void (*func)(REF(T)), REF(T) userData, int unused); \
   };
 
 struct Object
@@ -65,22 +65,24 @@ REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line);
 void _RefFree(REF(Object) *ref);
 void _RefThrow(int code, char *message, char *file, int line);
 
-void *_RefGet(REF(Object) obj, int throws);
+void *_RefGet(REF(Object) obj, int throws, int unused);
 void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)));
-void *_RefCast(REF(Object) obj, char *type);
-REF(Exception) _RefTry(void (*func)(REF(Object)), REF(Object) userData);
+void *_RefCast(REF(Object) obj, char *type, int unused);
+REF(Exception) _RefTry(void (*func)(REF(Object)), REF(Object) userData, int unused);
+
+int _RefThrowIfNotFunc(void(*a)(), void(*b)());
 
 #define TRY(F, R) \
-  R.try(F, R)
+  R.try(F, R, _RefThrowIfNotFunc((void(*)())R.try, (void(*)())_RefTry))
 
 #define CAST(T, R) \
-  *((struct T##Ref*)R.cast(R, "struct "#T))
+  *((struct T##Ref*)R.cast(R, "struct "#T, _RefThrowIfNotFunc((void(*)())R.cast, (void(*)())_RefCast)))
 
 #define GET(R) \
-  (((void(*)())R.get != (void(*)())_RefGet) ? NULL : R.get(R, 1))
+  R.get(R, 1, _RefThrowIfNotFunc((void(*)())R.get, (void(*)())_RefGet))
 
 #define TRYGET(R) \
-  (((void(*)())R.get != (void(*)())_RefGet) ? NULL : R.get(R, 0))
+  (((void(*)())R.get != (void(*)())_RefGet) ? NULL : R.get(R, 0, 0))
 
 #define CALLOC(T) \
   *((struct T##Ref*)_RefCalloc(sizeof(struct T), "struct "#T, __FILE__, __LINE__))
@@ -88,7 +90,10 @@ REF(Exception) _RefTry(void (*func)(REF(Object)), REF(Object) userData);
 #define FINALIZER(R, F) \
   do \
   { \
-    if(R.finalizer == NULL) THROW(0, "Attempt to set finalizer on NULL pointer"); \
+    if((void(*)())R.finalizer != (void(*)())_RefFinalizer) \
+    { \
+      THROW(0, "Attempt to set finalizer on NULL pointer"); \
+    } \
     R.finalizer(R, F); \
   } \
   while(0)
@@ -98,7 +103,7 @@ REF(Exception) _RefTry(void (*func)(REF(Object)), REF(Object) userData);
   { \
     if((void(*)())R.get != (void(*)())_RefGet) \
     { \
-      break; \
+      THROW(0, "Attempt to free uninitialized reference"); \
     } \
     _RefFree((REF(Object)*)&R); \
   } \

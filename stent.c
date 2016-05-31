@@ -37,6 +37,16 @@ struct ExceptionData *_refExceptionStack;
 size_t _refExceptionStackCount;
 size_t _refExceptionStackLocation;
 
+int _RefThrowIfNotFunc(void(*a)(), void(*b)())
+{
+  if(a != b)
+  {
+    THROW(0, "Reference has not yet been initialized");
+  }
+
+  return 0;
+}
+
 void _RefThrow(int code, char *message, char *file, int line)
 {
   struct ExceptionData *exceptionData = NULL;
@@ -275,7 +285,7 @@ void _RefReleaseExceptionLevel(int exceptionLevel, int performFree)
   }
 }
 
-REF(Exception) _RefTry(void (*func)(REF(Object)), REF(Object) userData)
+REF(Exception) _RefTry(void (*func)(REF(Object)), REF(Object) userData, int unused)
 {
   REF(Exception) rtn = {};
   struct ExceptionData *exceptionData = NULL;
@@ -317,22 +327,22 @@ void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)))
 {
   struct RefData *refData = NULL;
 
-  if(GET(obj) == NULL)
+  if(TRYGET(obj) == NULL)
   {
-    return;
+    THROW(0, "Failed to add finalizer because reference is no longer valid");
   }
 
   refData = _refs[obj.idx];
   refData->finalizer = finalizer;
 }
 
-void *_RefCast(REF(Object) obj, char *type)
+void *_RefCast(REF(Object) obj, char *type, int unused)
 {
   struct RefData *refData = NULL;
 
   if(GET(obj) == NULL)
   {
-    THROW(0, "Reference is no longer valid");
+    THROW(0, "Failed to cast because reference is no longer valid");
   }
 
   refData = _refs[obj.idx];
@@ -351,7 +361,7 @@ void *_RefCast(REF(Object) obj, char *type)
   return &_refObject;
 }
 
-void *_RefGet(REF(Object) obj, int throws)
+void *_RefGet(REF(Object) obj, int throws, int unused)
 {
   struct RefData *refData = NULL;
 
@@ -410,3 +420,4 @@ size_t _AbortIfNotLess(size_t a, size_t b)
 
   return a;
 }
+

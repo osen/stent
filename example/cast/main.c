@@ -15,7 +15,10 @@ int main(int argc, char *argv[])
   test = CALLOC(Test);
   GET(test)->someData = 9;
 
-  //object = CAST(Object, test);
+  object = CAST(Object, test);
+  test = CAST(Test, test);
+
+  printf("Some Data: %i\n", GET(test)->someData);
 
   FREE(test);
 
