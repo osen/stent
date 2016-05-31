@@ -411,7 +411,7 @@ REF(Object) *_AddArrayFinalizer(REF(Object) *ctx)
   return ctx;
 }
 
-size_t _AbortIfNotLess(size_t a, size_t b)
+size_t _RefThrowIfNotLess(size_t a, size_t b)
 {
   if(a >= b)
   {
