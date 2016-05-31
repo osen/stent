@@ -269,7 +269,7 @@ void _RefReleaseExceptionLevel(int exceptionLevel, int performFree)
       }
       else
       {
-        _refs[i]->exceptionLevel = 0;
+        _refs[i]->exceptionLevel--;
       }
     }
   }
