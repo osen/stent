@@ -11,6 +11,7 @@ cc -Wall -obin/cast -I. example/cast/*.c stent.c
 cc -Wall -obin/exception -I. example/exception/*.c stent.c
 cc -Wall -obin/transaction -I. example/transaction/*.c stent.c
 cc -Wall -obin/string -I. example/string/*.c *.c
+cc -Wall -obin/socket -I. example/socket/*.c *.c
 
 #cc -Wall `pkg-config --cflags gtk+-3.0` -I. -obin/gtk example/gtk/*.c *.c `pkg-config --libs gtk+-3.0`
 

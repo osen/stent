@@ -152,6 +152,12 @@ REF(Object) *_StentAddArrayFinalizer(REF(Object) *ctx);
 #define ARRAY_AT(A, I) \
   GET(A)->data[_StentThrowIfNotLess(I, GET(A)->size)]
 
+#define ARRAY_CLEAR(A)     \
+  while(ARRAY_SIZE(A) > 0) \
+  {                        \
+    ARRAY_REMOVEAT(A, 0);  \
+  }
+
 #define ARRAY_REMOVEAT(A, I)                                \
   do                                                        \
   {                                                         \

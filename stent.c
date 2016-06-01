@@ -35,6 +35,7 @@ static struct
   size_t exceptionStackCount;
   size_t exceptionStackLocation;
   struct ExceptionData *exceptionStack;
+  int inFinalizer;
 } stent;
 
 int _StentThrowIfNotFunc(void(*a)(), void(*b)())
@@ -51,7 +52,7 @@ void _StentThrow(int code, char *message, char *file, int line)
 {
   struct ExceptionData *exceptionData = NULL;
 
-  if(stent.exceptionStackLocation <= 0)
+  if(stent.exceptionStackLocation <= 0 || stent.inFinalizer > 0)
   {
     printf("Unhandled Exception (%i): %s\nFILE: %s\nLINE: %i\n",
       code, message, file, line);
@@ -75,14 +76,17 @@ void _StentFree(REF(Object) *ref)
 
   if(TRYGET(_ref) == NULL)
   {
-    return;
+    THROW(0, "Attempt to double free reference");
+    //return;
   }
 
   refData = stent.refs[_ref.idx];
 
   if(refData->finalizer != NULL)
   {
+    stent.inFinalizer ++;
     refData->finalizer(_ref);
+    stent.inFinalizer --;
   }
 
   free(refData->ptr);

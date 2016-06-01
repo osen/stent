@@ -73,8 +73,8 @@ int main(int argc, char *argv[])
   FREE(employees);
 
   // Double free? Should be fine
-  FREE(employee);
-  FREE(employees);
+  //TRYFREE(employee);
+  //TRYFREE(employees);
 
   StentStats();
   StentCleanup();
