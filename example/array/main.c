@@ -76,8 +76,8 @@ int main(int argc, char *argv[])
   FREE(employee);
   FREE(employees);
 
-  RefStats();
-  RefCleanup();
+  StentStats();
+  StentCleanup();
 
   return 0;
 }

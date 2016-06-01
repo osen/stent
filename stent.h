@@ -49,89 +49,89 @@ struct Exception
 
 REFDEF(Exception);
 
-int _RefThrowIfNotFunc(void(*a)(), void(*b)());
-size_t _RefThrowIfNotLess(size_t a, size_t b);
+int _StentThrowIfNotFunc(void(*a)(), void(*b)());
+size_t _StentThrowIfNotLess(size_t a, size_t b);
 
-void _RefThrow(int code, char *message, char *file, int line);
-#define THROW(C, M)                      \
-  do                                     \
-  {                                      \
-    _RefThrow(C, M, __FILE__, __LINE__); \
-    abort();                             \
-  }                                      \
+void _StentThrow(int code, char *message, char *file, int line);
+#define THROW(C, M)                        \
+  do                                       \
+  {                                        \
+    _StentThrow(C, M, __FILE__, __LINE__); \
+    abort();                               \
+  }                                        \
   while(0)
 
-REF(Exception) _RefTry(void (*func)(REF(Object)),
+REF(Exception) _StentTry(void (*func)(REF(Object)),
   REF(Object) userData, int unused);
 
-#define TRY(F, R)                                  \
-  R.try(F, R, _RefThrowIfNotFunc((void(*)())R.try, \
-    (void(*)())_RefTry))
+#define TRY(F, R)                                    \
+  R.try(F, R, _StentThrowIfNotFunc((void(*)())R.try, \
+    (void(*)())_StentTry))
 
-void *_RefCast(REF(Object) obj, char *type, int unused);
+void *_StentCast(REF(Object) obj, char *type, int unused);
 
-#define CAST(T, R)                         \
-  *((struct T##Ref*)R.cast(R, "struct "#T, \
-    _RefThrowIfNotFunc((void(*)())R.cast,  \
-    (void(*)())_RefCast)))
+#define CAST(T, R)                          \
+  *((struct T##Ref*)R.cast(R, "struct "#T,  \
+    _StentThrowIfNotFunc((void(*)())R.cast, \
+    (void(*)())_StentCast)))
 
-void *_RefGet(REF(Object) obj, int throws, int unused);
+void *_StentGet(REF(Object) obj, int throws, int unused);
 
-#define TRYGET(R)                             \
-  (((void(*)())R.get != (void(*)())_RefGet) ? \
+#define TRYGET(R)                               \
+  (((void(*)())R.get != (void(*)())_StentGet) ? \
     NULL : R.get(R, 0, 0))
 
-#define GET(R)                                     \
-  R.get(R, 1, _RefThrowIfNotFunc((void(*)())R.get, \
-    (void(*)())_RefGet))
+#define GET(R)                                       \
+  R.get(R, 1, _StentThrowIfNotFunc((void(*)())R.get, \
+    (void(*)())_StentGet))
 
-REF(Object) *_RefCalloc(size_t size, char *type, char *file, int line);
+REF(Object) *_StentCalloc(size_t size, char *type, char *file, int line);
 
-#define CALLOC(T)                                \
-  *((struct T##Ref*)_RefCalloc(sizeof(struct T), \
+#define CALLOC(T)                                  \
+  *((struct T##Ref*)_StentCalloc(sizeof(struct T), \
     "struct "#T, __FILE__, __LINE__))
 
-void _RefFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)));
+void _StentFinalizer(REF(Object) obj, void (*finalizer)(REF(Object)));
 
-#define FINALIZER(R, F)                                     \
-  do                                                        \
-  {                                                         \
-    if((void(*)())R.finalizer != (void(*)())_RefFinalizer)  \
-    {                                                       \
-      THROW(0, "Attempt to set finalizer on NULL pointer"); \
-    }                                                       \
-    R.finalizer(R, F);                                      \
-  }                                                         \
+#define FINALIZER(R, F)                                      \
+  do                                                         \
+  {                                                          \
+    if((void(*)())R.finalizer != (void(*)())_StentFinalizer) \
+    {                                                        \
+      THROW(0, "Attempt to set finalizer on NULL pointer");  \
+    }                                                        \
+    R.finalizer(R, F);                                       \
+  }                                                          \
   while(0)
 
-void _RefFree(REF(Object) *ref);
+void _StentFree(REF(Object) *ref);
 
 #define FREE(R)                                            \
   do                                                       \
   {                                                        \
-    if((void(*)())R.get != (void(*)())_RefGet)             \
+    if((void(*)())R.get != (void(*)())_StentGet)           \
     {                                                      \
       THROW(0, "Attempt to free uninitialized reference"); \
     }                                                      \
-    _RefFree((REF(Object)*)&R);                            \
+    _StentFree((REF(Object)*)&R);                          \
   }                                                        \
   while(0)
 
-void RefStats();
-void RefCleanup();
+void StentStats();
+void StentCleanup();
 
 //
 // Array support
 //
 
-REF(Object) *_AddArrayFinalizer(REF(Object) *ctx);
+REF(Object) *_StentAddArrayFinalizer(REF(Object) *ctx);
 
 #define ARRAY(T) \
   struct _##T##ArrayRef
 
 #define ARRAY_ALLOC(T)                          \
-  *((struct _##T##ArrayRef*)_AddArrayFinalizer( \
-    _RefCalloc(sizeof(struct _##T##Array),      \
+  *((struct _##T##ArrayRef*)_StentAddArrayFinalizer( \
+    _StentCalloc(sizeof(struct _##T##Array),    \
     "struct "#T"[]", __FILE__, __LINE__)))
 
 #define ARRAY_ADD(A, E)                                                      \
@@ -150,14 +150,14 @@ REF(Object) *_AddArrayFinalizer(REF(Object) *ctx);
   GET(A)->size
 
 #define ARRAY_AT(A, I) \
-  GET(A)->data[_RefThrowIfNotLess(I, GET(A)->size)]
+  GET(A)->data[_StentThrowIfNotLess(I, GET(A)->size)]
 
 #define ARRAY_REMOVEAT(A, I)                                \
   do                                                        \
   {                                                         \
     int ri = 0;                                             \
     ri = I;                                                 \
-    _RefThrowIfNotLess(ri, GET(A)->size);                   \
+    _StentThrowIfNotLess(ri, GET(A)->size);                 \
     if(ri != GET(A)->size - 1)                              \
     {                                                       \
       memmove(GET(A)->data + ri, GET(A)->data + (ri + 1),   \

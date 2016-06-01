@@ -16,8 +16,8 @@ int main(int argc, char *argv[])
 
   //FREE(leaking);
 
-  RefStats();
-  RefCleanup();
+  StentStats();
+  StentCleanup();
 
   return 0;
 }

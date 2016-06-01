@@ -43,8 +43,8 @@ int main(int argc, char *argv[])
 
   FREE(test);
 
-  RefStats();
-  RefCleanup();
+  StentStats();
+  StentCleanup();
 
   return 0;
 }

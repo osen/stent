@@ -14,8 +14,8 @@ int main(int argc, char *argv[])
   FREE(username);
   printf("String data (after free): %p\n", TRYGET(username));
 
-  RefStats();
-  RefCleanup();
+  StentStats();
+  StentCleanup();
 
   return 0;
 }

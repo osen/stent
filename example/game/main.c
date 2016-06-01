@@ -26,8 +26,8 @@ int main(int argc, char* argv[])
   printf("Player: %p\n", TRYGET(player));
   printf("Weapon: %p\n", TRYGET(weapon));
 
-  RefStats();
-  RefCleanup();
+  StentStats();
+  StentCleanup();
 
   return 0;
 }
