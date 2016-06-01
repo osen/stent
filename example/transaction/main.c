@@ -58,6 +58,10 @@ void safe_main(REF(UserData) userData)
   FINALIZER(third, ThirdFinalizer);
 
   THROW(0, "Something exceptional has happened");
+
+  FREE(third);
+  FREE(second);
+  FREE(first);
 }
 
 int main(int argc, char *argv[])

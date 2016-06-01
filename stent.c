@@ -262,6 +262,26 @@ static void _StentReleaseExceptionLevel(int exceptionLevel, int performFree)
   int found = 0;
   size_t oldestIndex = 0;
 
+  if(!performFree)
+  {
+    for(i = 0; i < stent.refCount; i++)
+    {
+      current = *_StentFromRefData(i);
+
+      if(TRYGET(current) == NULL)
+      {
+        continue;
+      }
+
+      if(stent.refs[i]->exceptionLevel == exceptionLevel)
+      {
+        stent.refs[i]->exceptionLevel--;
+      }
+    }
+
+    return;
+  }
+
   while(1)
   {
     found = 0;
@@ -305,15 +325,8 @@ static void _StentReleaseExceptionLevel(int exceptionLevel, int performFree)
       break;
     }
 
-    if(performFree)
-    {
-      current = *_StentFromRefData(oldestIndex);
-      FREE(current);
-    }
-    else
-    {
-      stent.refs[oldestIndex]->exceptionLevel--;
-    }
+    current = *_StentFromRefData(oldestIndex);
+    FREE(current);
   }
 }
 
