@@ -103,28 +103,28 @@ size_t StringLength(REF(String) ctx)
 struct InputFile
 {
   FILE *file;
-  REF(String) buffer;
   int eof;
 };
 
-void InputFileClose(REF(InputFile) ctx)
+void InputFileFinalize(REF(InputFile) ctx)
 {
   if(GET(ctx)->file != NULL)
   {
     fclose(GET(ctx)->file);
   }
-
-  FREE(GET(ctx)->buffer);
 }
 
-static void InputFileUpdateBuffer(REF(InputFile) ctx)
+void InputFileReadLine(REF(InputFile) ctx, REF(String) out)
 {
   char buffer[128] = {};
   char *res = NULL;
   size_t len = 0;
   int i = 0;
 
-  StringClear(GET(ctx)->buffer);
+  if(InputFileEof(ctx))
+  {
+    THROW(0, "Attempt to read past end of file");
+  }
 
   while(1)
   {
@@ -132,11 +132,7 @@ static void InputFileUpdateBuffer(REF(InputFile) ctx)
 
     if(res == NULL)
     {
-      if(StringLength(GET(ctx)->buffer) == 0)
-      {
-        FREE(GET(ctx)->buffer);
-      }
-
+      GET(ctx)->eof = 1;
       return;
     }
 
@@ -144,12 +140,28 @@ static void InputFileUpdateBuffer(REF(InputFile) ctx)
 
     for(i = 0; i < len; i++)
     {
-      if(buffer[i] == '\n' || buffer[i] == '\r')
+      if(buffer[i] == '\n')
       {
+        char test = getc(GET(ctx)->file);
+
+        if(test == EOF)
+        {
+          GET(ctx)->eof = 1;
+        }
+        else
+        {
+          ungetc(test, GET(ctx)->file);
+        }
+
         return;
       }
 
-      StringAddChar(GET(ctx)->buffer, buffer[i]);
+      if(buffer[i] == '\r')
+      {
+        continue;
+      }
+
+      StringAddChar(out, buffer[i]);
     }
   }
 }
@@ -159,41 +171,20 @@ REF(InputFile) InputFileOpen(char *path)
   REF(InputFile) rtn = {};
 
   rtn = CALLOC(InputFile);
-  FINALIZER(rtn, InputFileClose);
+  FINALIZER(rtn, InputFileFinalize);
 
   GET(rtn)->file = fopen(path, "r");
 
   if(GET(rtn)->file == NULL)
   {
-    FREE(rtn);
-
-    return rtn;
+    THROW(0, "Failed to open file");
   }
-
-  GET(rtn)->buffer = StringAllocCStr("");
-  InputFileUpdateBuffer(rtn);
 
   return rtn;
 }
 
 int InputFileEof(REF(InputFile) ctx)
 {
-  if(TRYGET(GET(ctx)->buffer) == NULL)
-  {
-    return 1;
-  }
-
-  return 0;
+  return GET(ctx)->eof;
 }
 
-void InputFileReadLine(REF(InputFile) ctx, REF(String) out)
-{
-  if(InputFileEof(ctx))
-  {
-    printf("No data left in buffer\n");
-    abort();
-  }
-
-  StringCopy(out, GET(ctx)->buffer);
-  InputFileUpdateBuffer(ctx);
-}
