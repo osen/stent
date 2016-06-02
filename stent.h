@@ -40,6 +40,11 @@ struct Object
 
 REFDEF(Object);
 
+extern REF(Object) _StentNullObject;
+
+#define NULLREF(T) \
+  *((REF(T)*)&_StentNullObject)
+
 struct Exception
 {
   int errorCode;

@@ -14,6 +14,8 @@ cc -Wall -obin/string -I. example/string/*.c *.c
 cc -Wall -obin/socket -I. example/socket/*.c *.c
 cc -Wall -obin/file -I. example/file/*.c *.c
 
+cc -Wall -obin/mongoose -I. wrappers/mongoose/*.c *.c
+
 #cc -Wall `pkg-config --cflags gtk+-3.0` -I. -obin/gtk example/gtk/*.c *.c `pkg-config --libs gtk+-3.0`
 
 #

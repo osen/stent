@@ -13,6 +13,7 @@ struct RefData
   char *file;
   int line;
   void (*finalizer)(REF(Object));
+  int finalizing;
   int exceptionLevel;
 };
 
@@ -37,6 +38,8 @@ static struct
   struct ExceptionData *exceptionStack;
   int inFinalizer;
 } stent;
+
+REF(Object) _StentNullObject;
 
 int _StentThrowIfNotFunc(void(*a)(), void(*b)())
 {
@@ -81,6 +84,13 @@ void _StentFree(REF(Object) *ref)
   }
 
   refData = stent.refs[_ref.idx];
+
+  if(refData->finalizing == 1)
+  {
+    return;
+  }
+
+  refData->finalizing = 1;
 
   if(refData->finalizer != NULL)
   {
@@ -240,6 +250,7 @@ REF(Object) *_StentCalloc(size_t size, char *type, char *file, int line)
   refData->line = line;
   refData->finalizer = NULL;
   refData->exceptionLevel = stent.exceptionStackLocation;
+  refData->finalizing = 0;
 
   stent.unique++;
 
