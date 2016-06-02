@@ -15,7 +15,7 @@ void safe_main(REF(Object) userData)
     StringAddChar(lines, '\n');
   }
 
-  printf("Contents Length: %i\n", StringLength(lines));
+  printf("Contents Length: %lu\n", (unsigned long)StringLength(lines));
   FREE(lines);
   FREE(ifile);
 }
