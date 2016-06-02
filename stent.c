@@ -272,7 +272,7 @@ static void _StentExceptionFinalizer(REF(Exception) ctx)
 
 static void _StentReleaseExceptionLevel(int exceptionLevel, int performFree)
 {
-  REF(Object) current = {};
+  REF(Object) current = {0};
   size_t i = 0;
   int found = 0;
   size_t oldestIndex = 0;
@@ -348,7 +348,7 @@ static void _StentReleaseExceptionLevel(int exceptionLevel, int performFree)
 REF(Exception) _StentTry(void (*func)(REF(Object)), REF(Object) userData,
   int unused)
 {
-  REF(Exception) rtn = {};
+  REF(Exception) rtn = {0};
   struct ExceptionData *exceptionData = NULL;
 
   stent.exceptionStackLocation++;

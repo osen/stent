@@ -16,7 +16,7 @@ void StringFree(REF(String) ctx)
 
 REF(String) StringEmpty()
 {
-  REF(String) rtn = {};
+  REF(String) rtn = {0};
 
   rtn = CALLOC(String);
   FINALIZER(rtn, StringFree);
@@ -28,7 +28,7 @@ REF(String) StringEmpty()
 
 REF(String) StringAllocCStr(char *str)
 {
-  REF(String) rtn = {};
+  REF(String) rtn = {0};
 
   rtn = CALLOC(String);
   FINALIZER(rtn, StringFree);
@@ -68,7 +68,7 @@ void StringAddCStr(REF(String) ctx, char *add)
 void StringAddInt(REF(String) ctx, int add)
 {
   // TODO: Get correct size
-  char str[15] = {};
+  char str[15] = {0};
 
   sprintf(str, "%d", add);
   GET(ctx)->length += strlen(str);
@@ -116,7 +116,7 @@ void InputFileFinalize(REF(InputFile) ctx)
 
 void InputFileReadLine(REF(InputFile) ctx, REF(String) out)
 {
-  char buffer[128] = {};
+  char buffer[128] = {0};
   char *res = NULL;
   size_t len = 0;
   int i = 0;
@@ -168,7 +168,7 @@ void InputFileReadLine(REF(InputFile) ctx, REF(String) out)
 
 REF(InputFile) InputFileOpen(char *path)
 {
-  REF(InputFile) rtn = {};
+  REF(InputFile) rtn = {0};
 
   rtn = CALLOC(InputFile);
   FINALIZER(rtn, InputFileFinalize);

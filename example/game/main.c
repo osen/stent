@@ -7,9 +7,9 @@
 
 int main(int argc, char* argv[])
 {
-  REF(Player) player = {};
-  REF(Weapon) weapon = {};
-  REF(Player) enemy = {};
+  REF(Player) player = {0};
+  REF(Weapon) weapon = {0};
+  REF(Player) enemy = {0};
 
   player = PlayerCreate();
   weapon = PlayerWeapon(player);

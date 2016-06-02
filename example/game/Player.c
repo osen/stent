@@ -13,7 +13,7 @@ struct Player
 
 REF(Player) PlayerCreate()
 {
-  REF(Player) rtn = {};
+  REF(Player) rtn = {0};
 
   rtn = CALLOC(Player);
   FINALIZER(rtn, PlayerDestroy);

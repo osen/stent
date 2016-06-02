@@ -11,7 +11,7 @@ struct Weapon
 
 REF(Weapon) WeaponCreate(REF(Player) owner)
 {
-  REF(Weapon) rtn = {};
+  REF(Weapon) rtn = {0};
 
   rtn = CALLOC(Weapon);
   FINALIZER(rtn, WeaponDestroy);
