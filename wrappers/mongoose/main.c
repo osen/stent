@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
   if(TRYGET(ex) != NULL)
   {
     printf("Exception: %s\n", GET(ex)->message);
+    FREE(ex);
     rtn = 1;
   }
 
