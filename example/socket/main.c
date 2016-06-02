@@ -32,33 +32,17 @@ static void _SocketDescriptorFinalize(REF(SocketDescriptor) ctx)
 
 void SocketClose(REF(Socket) ctx)
 {
-  size_t i = 0;
-
-  if(TRYGET(GET(ctx)->fd) != NULL)
-  {
-    FREE(GET(ctx)->fd);
-  }
-
-  if(TRYGET(GET(ctx)->connectingFds) != NULL)
-  {
-    for(i = 0; i < ARRAY_SIZE(GET(ctx)->connectingFds); i++)
-    {
-      FREE(ARRAY_AT(GET(ctx)->connectingFds, i));
-    }
-
-    ARRAY_CLEAR(GET(ctx)->connectingFds);
-  }
+  TRYFREE(GET(ctx)->fd);
+  TRYFREE(GET(ctx)->connectingFds);
+  GET(ctx)->connectingFds = ARRAY_ALLOC(SocketDescriptor);
+  ARRAY_AUTOFREE(GET(ctx)->connectingFds);
 }
 
 static void _SocketFinalize(REF(Socket) ctx)
 {
   printf("~Socket\n");
   SocketClose(ctx);
-
-  if(TRYGET(GET(ctx)->connectingFds) != NULL)
-  {
-    FREE(GET(ctx)->connectingFds);
-  }
+  TRYFREE(GET(ctx)->connectingFds);
 }
 
 REF(Socket) SocketCreate()
@@ -68,6 +52,7 @@ REF(Socket) SocketCreate()
   rtn = CALLOC(Socket);
   FINALIZER(rtn, _SocketFinalize);
   GET(rtn)->connectingFds = ARRAY_ALLOC(SocketDescriptor);
+  ARRAY_AUTOFREE(GET(rtn)->connectingFds);
 
   return rtn;
 }
@@ -211,6 +196,20 @@ void safe_main(REF(Object) userData)
   FREE(userData);
   socket = SocketCreate();
   SocketConnect(socket, "www.google.com", 80);
+
+  for(i = 0; i < 3; i++)
+  {
+    if(SocketConnected(socket) != 0)
+    {
+      printf("Connected!\n");
+      break;
+    }
+
+    printf("Connecting...\n");
+    sleep(1);
+  }
+
+  SocketConnect(socket, "www.freebsd.org", 8099);
 
   for(i = 0; i < 3; i++)
   {

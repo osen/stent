@@ -43,6 +43,8 @@ int main(int argc, char *argv[])
   GET(employee)->id = 9;
 
   employees = ARRAY_ALLOC(Employee);
+  ARRAY_AUTOFREE(employees);
+
   ARRAY_ADD(employees, employee);
   ARRAY_ADD(employees, CALLOC(Employee));
   ARRAY_ADD(employees, employee);
@@ -72,9 +74,9 @@ int main(int argc, char *argv[])
   FREE(ARRAY_AT(employees, 1));
   FREE(employees);
 
-  // Double free? Should be fine
-  //TRYFREE(employee);
-  //TRYFREE(employees);
+  // Double free? Should be fine if TRYFREE is used
+  TRYFREE(employee);
+  TRYFREE(employees);
 
   StentStats();
   StentCleanup();

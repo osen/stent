@@ -16,6 +16,7 @@
   {                    \
     REF(T) *data;      \
     int size;          \
+    int autoFree;      \
   };                   \
   DECLARE(_##T##Array)
 
@@ -117,6 +118,12 @@ void _StentFree(REF(Object) *ref);
   }                                                        \
   while(0)
 
+#define TRYFREE(R)      \
+  if(TRYGET(R) != NULL) \
+  {                     \
+    FREE(R);            \
+  }
+
 void StentStats();
 void StentCleanup();
 
@@ -133,6 +140,9 @@ REF(Object) *_StentAddArrayFinalizer(REF(Object) *ctx);
   *((struct _##T##ArrayRef*)_StentAddArrayFinalizer( \
     _StentCalloc(sizeof(struct _##T##Array),    \
     "struct "#T"[]", __FILE__, __LINE__)))
+
+#define ARRAY_AUTOFREE(A) \
+  GET(A)->autoFree = 1;
 
 #define ARRAY_ADD(A, E)                                                      \
   do                                                                         \

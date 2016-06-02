@@ -449,6 +449,16 @@ invalid:
 
 static void _StentArrayFinalizer(ARRAY(Object) obj)
 {
+  size_t i = 0;
+
+  if(GET(obj)->autoFree == 1)
+  {
+    for(i = 0; i < ARRAY_SIZE(obj); i++)
+    {
+      TRYFREE(ARRAY_AT(obj, i));
+    }
+  }
+
   if(GET(obj)->data) free(GET(obj)->data);
 }
 
