@@ -4,7 +4,7 @@ set -e
 
 mkdir -p bin
 
-cc -std=c89 -Wall -obin/game -I. example/game/*.c stent.c
+cc -std=c89 -pedantic -Wall -obin/game -I. example/game/*.c stent.c
 cc -Wall -obin/leak -I. example/leak/*.c stent.c
 cc -Wall -obin/array -I. example/array/*.c stent.c
 cc -Wall -obin/cast -I. example/cast/*.c stent.c

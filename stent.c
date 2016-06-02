@@ -172,10 +172,10 @@ static REF(Object) *_StentFromRefData(int idx)
   }
 
   stent.tempObject.idx = idx;
-  *(void **)(&stent.tempObject.cast) = _StentCast;
-  *(void **)(&stent.tempObject.get) = _StentGet;
-  *(void **)(&stent.tempObject.finalizer) = _StentFinalizer;
-  *(void **)(&stent.tempObject.try) = _StentTry;
+  *(void (**)())(&stent.tempObject.cast) = (void (*)())_StentCast;
+  *(void (**)())(&stent.tempObject.get) = (void (*)())_StentGet;
+  *(void (**)())(&stent.tempObject.finalizer) = (void (*)())_StentFinalizer;
+  *(void (**)())(&stent.tempObject.try) = (void (*)())_StentTry;
   stent.tempObject.ptr = stent.refs[idx]->ptr;
   stent.tempObject.unique = stent.refs[idx]->unique;
   stent.tempObject.time = stent.refs[idx]->time;

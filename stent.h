@@ -31,7 +31,7 @@
     void (*finalizer)(REF(T), void (*)(REF(T)));                              \
     void *(*cast)(REF(T) obj, char *type, int unused);                        \
     REF(Exception) (*try)(void (*func)(REF(T)), REF(T) userData, int unused); \
-  };
+  }
 
 struct Object
 {

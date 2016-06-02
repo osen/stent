@@ -16,15 +16,15 @@ int main(int argc, char* argv[])
   enemy = PlayerCreate();
   PlayerSetTarget(player, enemy);
 
-  printf("Player: %p\n", GET(player));
-  printf("Weapon: %p\n", GET(weapon));
+  printf("Player: %p\n", (void*)GET(player));
+  printf("Weapon: %p\n", (void*)GET(weapon));
 
   FREE(enemy);
-  printf("Player Target: %p\n", TRYGET(PlayerTarget(player)));
+  printf("Player Target: %p\n", (void*)TRYGET(PlayerTarget(player)));
   FREE(player);
 
-  printf("Player: %p\n", TRYGET(player));
-  printf("Weapon: %p\n", TRYGET(weapon));
+  printf("Player: %p\n", (void*)TRYGET(player));
+  printf("Weapon: %p\n", (void*)TRYGET(weapon));
 
   StentStats();
   StentCleanup();
