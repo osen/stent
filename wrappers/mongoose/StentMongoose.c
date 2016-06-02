@@ -75,3 +75,14 @@ REF(MgConnection) MgBind(REF(MgManager) mgr, char *interface,
 
   return rtn;
 }
+
+void MgSetProtocolHttpWebsocket(REF(MgConnection) nc)
+{
+  mg_set_protocol_http_websocket(GET(nc)->nc);
+}
+
+void MgManagerPoll(REF(MgManager) mgr, int timeout)
+{
+  mg_mgr_poll(&GET(mgr)->mgr, timeout);
+}
+

@@ -2,7 +2,7 @@
 
 #include <stent.h>
 
-void ev_handler(REF(MgConnection) nc, int ev, REF(Object) userData)
+void ev_handler(REF(MgConnection) nc, int ev, REF(Object) evData)
 {
   printf("Event incoming: %i\n", ev);
 }
@@ -14,6 +14,13 @@ void safe_main(REF(Object) userData)
 
   mgr = MgManagerInit(NULLREF(Object));
   nc = MgBind(mgr, "8080", ev_handler);
+
+  MgSetProtocolHttpWebsocket(nc);
+
+  while(1)
+  {
+    MgManagerPoll(mgr, 1000);
+  }
 
   FREE(mgr);
   //FREE(nc);
