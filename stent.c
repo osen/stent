@@ -80,7 +80,10 @@ void _StentFree(REF(Object) *ref)
   if(TRYGET(_ref) == NULL)
   {
     THROW(0, "Attempt to double free reference");
-    //return;
+    /*
+      TODO return if in finalizer. Currently TRYFREE must be used
+      // return;
+    */;
   }
 
   refData = stent.refs[_ref.idx];

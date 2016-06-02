@@ -132,9 +132,9 @@ void _StentFree(REF(Object) *ref);
 void StentStats();
 void StentCleanup();
 
-//
-// Array support
-//
+/*
+ * Array support
+ */
 
 REF(Object) *_StentAddArrayFinalizer(REF(Object) *ctx);
 
