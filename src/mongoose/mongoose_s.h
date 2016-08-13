@@ -11,7 +11,7 @@ refdef(http_message_s);
 
 ref(mg_mgr_s) mg_mgr_init_s(ref(Object) userData);
 
-ref(mg_connection_s) mg_bind_s(ref(mg_mgr_s) mgr, char *interface,
+ref(mg_connection_s) mg_bind_s(ref(mg_mgr_s) mgr, char *,
   void (*func)(ref(mg_connection_s), int, ref(Object)));
 
 void mg_set_protocol_http_websocket_s(ref(mg_connection_s) nc);

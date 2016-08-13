@@ -821,7 +821,7 @@ ref(Exception) _stent_try(void (*func)(ref(Object)), ref(Object) userData,
   return rtn;
 }
 
-void _stent_throw(int code, char *message, char *file, int line)
+void _stent_throw(int code, const char *message, char *file, int line)
 {
   struct ExceptionStackItem *esi;
 
@@ -929,9 +929,14 @@ ref(String) StringCreate()
   return rtn;
 }
 
-ref(String) StringFromCStr(char *str)
+ref(String) StringFromCStr(const char *str)
 {
   ref(String) rtn;
+
+  if(!str)
+  {
+    throw(0, "String is not valid");
+  }
 
   rtn = StringCreate();
   CharArrayResize(get(rtn)->data, CharArraySize(get(rtn)->data) + strlen(str));
@@ -972,6 +977,12 @@ void StringAddCStr(ref(String) ctx, char *str)
   len = strlen(str);
   CharArrayResize(get(ctx)->data, CharArraySize(get(ctx)->data) + len);
   strcat(CharArrayGet(get(ctx)->data), str);
+}
+
+void StringSetCStr(ref(String) ctx, char *str)
+{
+  CharArrayResize(get(ctx)->data, strlen(str) + 1);
+  strcpy(CharArrayGet(get(ctx)->data), str);
 }
 
 void StringAddChar(ref(String) ctx, char c)
@@ -1028,13 +1039,15 @@ ref(CharArray) StringCharArray(ref(String) ctx)
 
 void StringAddInt(ref(String) ctx, int val)
 {
-  char str[10];
+  char str[30];
+  int res;
 
-  if(val >= 100000000)
+  res = snprintf(str, 25, "%i", val);
+
+  if(res >= 25)
   {
-    throw(0, "Support for large values not yet implemented");
+    throw(0, "Number too large");
   }
 
-  snprintf(str, 10, "%i", val);
   StringAddCStr(ctx, str);
 }

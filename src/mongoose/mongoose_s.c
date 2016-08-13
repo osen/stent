@@ -119,7 +119,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
   destroy(handlerData);
 }
 
-ref(mg_connection_s) mg_bind_s(ref(mg_mgr_s) mgr, char *interface,
+ref(mg_connection_s) mg_bind_s(ref(mg_mgr_s) mgr, char *_interface,
   void (*func)(ref(mg_connection_s), int, ref(Object)))
 {
   ref(mg_connection_s) rtn = {0};
@@ -129,7 +129,7 @@ ref(mg_connection_s) mg_bind_s(ref(mg_mgr_s) mgr, char *interface,
   strong(mgr, rtn);
   strong(rtn, mgr);
   finalizer(rtn, mg_connection_s_finalizer);
-  get(rtn)->raw = mg_bind(&get(mgr)->raw, interface, ev_handler);
+  get(rtn)->raw = mg_bind(&get(mgr)->raw, _interface, ev_handler);
 
   if(!get(rtn)->raw)
   {

@@ -4,6 +4,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define ref(T) \
   struct _stent_##T##_ref
@@ -123,6 +124,18 @@ ref(Object) *_stent_object_p_from_null();
   } \
   while(0)
 
+#define array_remove(A, I) \
+  do \
+  { \
+    void *tmp; \
+    memmove(get(A)->data + I, get(A)->data + I + 1, sizeof(*get(A)->data) * (get(A)->size - 1)); \
+    tmp = realloc(get(A)->data, sizeof(*get(A)->data) * (get(A)->size - 1)); \
+    if(!tmp) throw(0, "Failed to decrease size of array"); \
+    get(A)->data = tmp; \
+    get(A)->size--; \
+  } \
+  while(0)
+
 void stent_cleanup();
 
 ref(Object) *_stent_create(size_t size, char *type, char *file, int line);
@@ -134,7 +147,7 @@ void _stent_destroy(ref(Object) obj, int unused);
 void _stent_strong(ref(Object) parent, ref(Object) child, int unused);
 void _stent_finalizer(ref(Object) obj, void (*func)(ref(Object)), int unused);
 ref(Object) *_stent_cast(char * type, ref(Object) obj, int unused);
-void _stent_throw(int code, char *message, char *file, int line);
+void _stent_throw(int code, const char *message, char *file, int line);
 
 ref(Exception) _stent_try(void (*func)(ref(Object)), ref(Object) userData,
   int unused);
@@ -165,10 +178,11 @@ _stent_ARRAY_DEC(size_t, Size_t)
 refdef(String);
 
 ref(String) StringCreate();
-ref(String) StringFromCStr(char *str);
+ref(String) StringFromCStr(const char *str);
 ref(String) StringFromSubstring(ref(String), size_t, size_t);
 char *StringCStr(ref(String) ctx);
 void StringAddCStr(ref(String) ctx, char *str);
+void StringSetCStr(ref(String) ctx, char *str);
 void StringAddInt(ref(String) ctx, int val);
 int StringCompareCStr(ref(String) ctx, char *str);
 void StringAddChar(ref(String) ctx, char c);

@@ -51,7 +51,7 @@ void pclose_s(ref(FILE_s) ctx)
   destroy(ctx);
 }
 
-size_t fread_s(ref(CharArray) str, ref(FILE_s) stream)
+size_t _fread_s(ref(CharArray) str, ref(FILE_s) stream)
 {
   char *arr;
 
