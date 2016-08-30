@@ -29,8 +29,8 @@ ref(SomeStruct) someStruct = {0};         // Using Stent
 
 3) To dereference a pointer:
 
-someStruct->someData = 6;      // Standard C
-get(someStruct)->someData;     // Using Stent
+someStruct->someData = 6;          // Standard C
+get(someStruct)->someData = 6;     // Using Stent
 
 4) To allocate dynamic memory:
 
