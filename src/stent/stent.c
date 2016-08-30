@@ -319,7 +319,7 @@ ref(Object) *_stent_object_p_from_null()
   *(void (**)())(&stent.tempObject._finalizer) = (void (*)())_stent_finalizer;
   *(void (**)())(&stent.tempObject._strong) = (void (*)())_stent_strong;
   *(void (**)())(&stent.tempObject._cast) = (void (*)())_stent_cast;
-  *(void (**)())(&stent.tempObject._try) = (void (*)())_stent_try;
+  *(void (**)())(&stent.tempObject._try_s) = (void (*)())_stent_try;
 
   return &stent.tempObject;
 }

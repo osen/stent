@@ -35,7 +35,7 @@
     void (*_finalizer)(ref(T), void (*)(ref(T)), int); \
     void (*_strong)(ref(T), ref(Object), int); \
     ref(Object) *(*_cast)(char *, ref(Object), int); \
-    ref(Exception) (*_try)(void (*)(ref(T)), ref(T), int); \
+    ref(Exception) (*_try_s)(void (*)(ref(T)), ref(T), int); \
     char _stent_reference_object; \
   }
 
@@ -76,7 +76,7 @@ ref(Object) *_stent_object_p_from_null();
     0 : (R)._get((R), 0, (&R)->_stent_reference_object) != NULL)
 
 #define try(F, R) \
-  R._try(F, R, _stent_throw_if_not_func((void (*)())R._try, \
+  R._try_s(F, R, _stent_throw_if_not_func((void (*)())R._try_s, \
     (void (*)())_stent_try) + (&R)->_stent_reference_object)
 
 #define throw(C, M) \
