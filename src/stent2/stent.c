@@ -1,6 +1,11 @@
 #include "stent.h"
 
 #include <stdio.h>
+#include <string.h>
+
+/***************************************************
+ * Reference
+ ***************************************************/
 
 struct _StentAllocation
 {
@@ -84,5 +89,82 @@ int _svalid(void **ptr, char *file, size_t line)
   }
 
   return 1;
+}
+
+/***************************************************
+ * Vector
+ ***************************************************/
+
+struct _StentVector
+{
+  void *data;
+  size_t size;
+  size_t allocated;
+  size_t elementSize;
+};
+
+void ***_vector_new(size_t size, char *type)
+{
+  ref(struct _StentVector) rtn = NULL;
+
+  rtn = (ref(struct _StentVector))_salloc(sizeof(struct _StentVector), type);
+  _(rtn)->elementSize = size;
+
+  return (void ***)rtn;
+}
+
+void _vector_delete(void ***ptr, void **d1, void *d2, char *file, size_t line)
+{
+  _sfree((void **)ptr, file, line);
+}
+
+size_t _vector_size(void ***ptr, void **d1, void *d2)
+{
+  ref(struct _StentVector) v = NULL;
+
+  v = (ref(struct _StentVector))ptr;
+
+  return _(v)->size;
+}
+
+void _vector_resize(void ***ptr, void **d1, void *d2, size_t size)
+{
+  ref(struct _StentVector) v = NULL;
+  size_t s = 0;
+  void *d = NULL;
+
+  v = (ref(struct _StentVector))ptr;
+
+  if(_(v)->allocated >= size)
+  {
+    _(v)->size = size;
+    return;
+  }
+
+  s = 1;
+
+  while(1)
+  {
+    if(s >= size)
+    {
+      break;
+    }
+
+    s = s * 2;
+  }
+
+  d = calloc(s, _(v)->elementSize);
+
+  if(!d)
+  {
+    fprintf(stderr, "Error: Failed to increase vector size\n");
+    abort();
+  }
+
+  memcpy(d, _(v)->data, _(v)->elementSize * _(v)->size);
+  free(_(v)->data);
+  _(v)->data = d;
+  _(v)->allocated = s;
+  _(v)->size = size;
 }
 
