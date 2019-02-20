@@ -61,19 +61,19 @@ void **_salloc(size_t size, char *type)
   return rtn;
 }
 
-void _sfree(void **ptr, char *file, size_t line)
+void _sfree(void **ptr, char *file, size_t line, int dummy)
 {
   struct _StentAllocation *allocation = NULL;
 
   _sinit();
-  _svalid(ptr, file, line);
+  _svalid(ptr, file, line, 0);
 
   allocation = (struct _StentAllocation *)ptr;
   free(allocation->ptr);
   allocation->expired = 1;
 }
 
-int _svalid(void **ptr, char *file, size_t line)
+int _svalid(void **ptr, char *file, size_t line, int dummy)
 {
   struct _StentAllocation *allocation = NULL;
 
@@ -113,12 +113,17 @@ void ***_vector_new(size_t size, char *type)
   return (void ***)rtn;
 }
 
-void _vector_delete(void ***ptr, void **d1, void *d2, char *file, size_t line)
+void _vector_delete(void ***ptr, char *file, size_t line, int dummy)
 {
-  _sfree((void **)ptr, file, line);
+  ref(struct _StentVector) v = NULL;
+
+  v = (ref(struct _StentVector))ptr;
+  free(_(v)->data);
+
+  _sfree((void **)ptr, file, line, 0);
 }
 
-size_t _vector_size(void ***ptr, void **d1, void *d2)
+size_t _vector_size(void ***ptr, int dummy)
 {
   ref(struct _StentVector) v = NULL;
 
@@ -127,7 +132,7 @@ size_t _vector_size(void ***ptr, void **d1, void *d2)
   return _(v)->size;
 }
 
-void _vector_resize(void ***ptr, void **d1, void *d2, size_t size)
+void _vector_resize(void ***ptr, size_t size, int dummy)
 {
   ref(struct _StentVector) v = NULL;
   size_t s = 0;
@@ -168,3 +173,17 @@ void _vector_resize(void ***ptr, void **d1, void *d2, size_t size)
   _(v)->size = size;
 }
 
+size_t _vector_valid(void ***ptr, size_t idx)
+{
+  ref(struct _StentVector) v = NULL;
+
+  v = (ref(struct _StentVector))ptr;
+
+  if(_(v)->size > idx)
+  {
+    return idx;
+  }
+
+  fprintf(stderr, "Error: Index out of bounds\n");
+  abort();
+}

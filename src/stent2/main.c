@@ -48,34 +48,45 @@ ref(FILE) FileTest(ref(sstream) s)
 int main()
 {
   ref(struct Employee) emp = NULL;
+  /* ref(int) pint = NULL; */
   vector(int) ages = NULL;
   vector(ref(struct Employee)) emps = NULL;
+  vector(struct Employee) semps = NULL;
   struct Employee semp = {0};
   int i = 0;
+
+  emps = vector_new(ref(struct Employee));
 
   for(i = 0; i < 5; i++)
   {
     emp = EmployeeCreate();
-    EmployeeInfo(emp);
-    /* EmployeeDestroy(emp); */
+    vector_push_back(emps, emp);
   }
 
+  printf("Employee Vector size %i\n", (int)vector_size(emps));
+
+  for(i = 0; i < vector_size(emps); i++)
+  {
+    /* EmployeeDestroy(vector_at(emps, i)); */
+    /* sfree(vector_at(emps, i)); */
+    EmployeeInfo(vector_at(emps, i));
+    /* _(vector_at(emps, i))->age = 8; */
+  }
+
+  vector_delete(emps);
+  /* vector_delete(pint); */
+
+  semps = vector_new(struct Employee);
+  vector_push_back(semps, semp);
   EmployeeInfoSt(&semp);
+  /* vector_at(semps, 0); */
+  vector_delete(semps);
 
   ages = vector_new(int);
-
   vector_push_back(ages, 9);
   vector_push_back(ages, 99);
-
-  printf("Vector size %i\n", (int)vector_size(ages));
-
+  printf("Int size %i %i\n", (int)vector_size(ages), vector_at(ages, 0));
   vector_delete(ages);
-
-  emps = vector_new(ref(struct Employee));
-  vector_push_back(emps, emp);
-  /*vector_delete(emps);*/
-  printf("Vector size %i\n", (int)vector_size(emps));
-  /* EmployeeInfo(emps[0][0][0]); */
 
   return 0;
 }
