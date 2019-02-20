@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <stdio.h>
+
 /*
 #define STENT_ENABLE
 */
@@ -18,7 +20,10 @@
   T **
 
 #define salloc(T) \
-  (ref(T))_salloc(sizeof(T), #T)
+  (ref(T))_salloc(sizeof(T), #T, NULL)
+
+#define salloc_placement(T, F) \
+  (1 || (((T **)NULL)[0] = F) ? (ref(T))_salloc(0, #T, F) : (ref(T))NULL)
 
 #define sfree(R) \
   _sfree((void **)R, __FILE__, __LINE__, \
@@ -31,7 +36,7 @@
     memcmp(R[0], R[0], 0)) ? \
     R[0] : R[0])
 
-void **_salloc(size_t size, char *type);
+void **_salloc(size_t size, char *type, void *placement);
 void _sfree(void **ptr, char *file, size_t line, int dummy);
 int _svalid(void **ptr, char *file, size_t line, int dummy);
 

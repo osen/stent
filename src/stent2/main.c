@@ -8,8 +8,9 @@
 #define EMP_REF_TEST
 #define INT_REF_TEST
 #define SSTREAM_TEST
+#define FILE_TEST
 */
-#define INT_REF_TEST
+#define FILE_TEST
 
 struct Employee
 {
@@ -41,18 +42,23 @@ void EmployeeInfoSt(struct Employee *ctx)
   printf("Age: %i\n", ctx->age);
 }
 
-/*
-ref(FILE) FileTest(ref(sstream) s)
+#ifdef FILE_TEST
+
+char *fgets_s(char *str, int size, ref(FILE) f)
 {
-  FILE *f = NULL;
+  return fgets(str, size, _(f));
+}
+
+ref(FILE) fopen_s(const char *path, const char *mode)
+{
   ref(FILE) rtn = NULL;
 
-  f = fopen(sstream_cstr(s), "r");
-  rtn = sattach(FILE, f);
+  rtn = salloc_placement(FILE, fopen(path, mode));
+  if(!rtn) return NULL;
 
   return rtn;
 }
-*/
+#endif
 
 int main()
 {
@@ -122,6 +128,17 @@ int main()
   printf("StringStream: %s\n", sstream_cstr(ss));
 
   sstream_delete(ss);
+#endif
+
+#ifdef FILE_TEST
+  ref(FILE) f = NULL;
+  char text[128];
+
+  f = fopen_s("a.out", "r");
+  /* printf("[%s]\n", fgets_s(text, 128, f)); */
+  /* sfree(f); */
+  fgets_s(text, 128, f);
+
 #endif
 
   return 0;

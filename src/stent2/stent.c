@@ -33,7 +33,7 @@ void _sinit()
   }
 }
 
-void **_salloc(size_t size, char *type)
+void **_salloc(size_t size, char *type, void *placement)
 {
   ref(void) rtn = NULL;
   struct _StentBlock *sb = NULL;
@@ -41,12 +41,28 @@ void **_salloc(size_t size, char *type)
   _sinit();
 
   rtn = (ref(void))&_sblocks->allocations[_sblocks->count];
-  rtn[0] = calloc(1, size);
 
-  if(!rtn[0])
+  if(size)
   {
-    fprintf(stderr, "Error: Failed to allocate %s\n", type);
-    abort();
+    rtn[0] = calloc(1, size);
+
+    if(!rtn[0])
+    {
+      fprintf(stderr, "Error: Failed to allocate %s\n", type);
+      abort();
+    }
+  }
+  else
+  {
+    if(!placement)
+    {
+      fprintf(stderr, "Error: No size specified and no placement data %s\n",
+        type);
+
+      abort();
+    }
+
+    rtn[0] = placement;
   }
 
   _sblocks->allocations[_sblocks->count].type = type;
@@ -109,7 +125,9 @@ void ***_vector_new(size_t size, char *type)
 {
   ref(struct _StentVector) rtn = NULL;
 
-  rtn = (ref(struct _StentVector))_salloc(sizeof(struct _StentVector), type);
+  rtn = (ref(struct _StentVector))_salloc(sizeof(struct _StentVector),
+    type, NULL);
+
   _(rtn)->elementSize = size;
 
   return (void ***)rtn;
