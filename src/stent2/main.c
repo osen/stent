@@ -7,6 +7,7 @@
 #define INT_VECTOR_TEST
 #define EMP_REF_TEST
 #define INT_REF_TEST
+#define SSTREAM_TEST
 */
 #define INT_REF_TEST
 
@@ -109,6 +110,18 @@ int main()
   }
 
   vector_delete(emps);
+#endif
+
+#ifdef SSTREAM_TEST
+  sstream ss = NULL;
+
+  ss = sstream_new();
+  sstream_str(ss, "Hello World");
+
+  sstream_at(ss, 0);
+  printf("StringStream: %s\n", sstream_cstr(ss));
+
+  sstream_delete(ss);
 #endif
 
   return 0;
