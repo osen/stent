@@ -2,6 +2,14 @@
 
 #include <stdio.h>
 
+/*
+#define EMP_VECTOR_TEST
+#define INT_VECTOR_TEST
+#define EMP_REF_TEST
+#define INT_REF_TEST
+*/
+#define INT_REF_TEST
+
 struct Employee
 {
   int age;
@@ -47,46 +55,61 @@ ref(FILE) FileTest(ref(sstream) s)
 
 int main()
 {
+#ifdef EMP_REF_TEST
   ref(struct Employee) emp = NULL;
-  /* ref(int) pint = NULL; */
+
+  emp = EmployeeCreate();
+  EmployeeInfo(emp);
+  EmployeeDestroy(emp);
+#endif
+
+#ifdef INT_REF_TEST
+  ref(int) i = NULL;
+
+  i = salloc(int);
+  *_(i) = 9;
+  ++*_(i);
+  (*_(i)) ++;
+  ++(*_(i));
+  printf("Integer ref is %i\n", *_(i));
+  sfree(i);
+#endif
+
+#ifdef INT_VECTOR_TEST
   vector(int) ages = NULL;
+
+  ages = vector_new(int);
+  vector_push_back(ages, 9);
+  vector_push_back(ages, 99);
+
+  printf("Int Vector size %i [0] %i\n",
+    (int)vector_size(ages), vector_at(ages, 0));
+
+  vector_delete(ages);
+#endif
+
+#ifdef EMP_VECTOR_TEST
   vector(ref(struct Employee)) emps = NULL;
-  vector(struct Employee) semps = NULL;
-  struct Employee semp = {0};
   int i = 0;
 
   emps = vector_new(ref(struct Employee));
+  printf("Employee Vector size %i\n", (int)vector_size(emps));
 
   for(i = 0; i < 5; i++)
   {
-    emp = EmployeeCreate();
-    vector_push_back(emps, emp);
+    vector_push_back(emps, EmployeeCreate());
   }
 
   printf("Employee Vector size %i\n", (int)vector_size(emps));
 
   for(i = 0; i < vector_size(emps); i++)
   {
-    /* EmployeeDestroy(vector_at(emps, i)); */
-    /* sfree(vector_at(emps, i)); */
     EmployeeInfo(vector_at(emps, i));
     /* _(vector_at(emps, i))->age = 8; */
   }
 
   vector_delete(emps);
-  /* vector_delete(pint); */
-
-  semps = vector_new(struct Employee);
-  vector_push_back(semps, semp);
-  EmployeeInfoSt(&semp);
-  /* vector_at(semps, 0); */
-  vector_delete(semps);
-
-  ages = vector_new(int);
-  vector_push_back(ages, 9);
-  vector_push_back(ages, 99);
-  printf("Int size %i %i\n", (int)vector_size(ages), vector_at(ages, 0));
-  vector_delete(ages);
+#endif
 
   return 0;
 }

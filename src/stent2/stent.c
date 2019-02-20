@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef STENT_ENABLE
+
 /***************************************************
  * Reference
  ***************************************************/
@@ -187,3 +189,5 @@ size_t _vector_valid(void ***ptr, size_t idx)
   fprintf(stderr, "Error: Index out of bounds\n");
   abort();
 }
+
+#endif

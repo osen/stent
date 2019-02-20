@@ -1,7 +1,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+#define STENT_ENABLE
+*/
+#define STENT_ENABLE
+
 #define STENT_BLOCKSIZE 1024
+
+#ifdef STENT_ENABLE
 
 /***************************************************
  * Reference
@@ -20,7 +27,8 @@
 
 #define _(R) \
   (_svalid((void **)R, __FILE__, __LINE__, \
-    (&R == &R) && (R[0] == R[0])) ? \
+    memcmp(&R, &R, 0) && \
+    memcmp(R[0], R[0], 0)) ? \
     R[0] : R[0])
 
 void **_salloc(size_t size, char *type);
@@ -68,3 +76,23 @@ void _vector_delete(void ***ptr, char *file, size_t line, int dummy);
 size_t _vector_size(void ***ptr, int dummy);
 void _vector_resize(void ***ptr, size_t size, int dummy);
 size_t _vector_valid(void ***ptr, size_t idx);
+
+#else
+
+/***************************************************
+ * Dummy
+ ***************************************************/
+
+#define ref(T) \
+  T *
+
+#define salloc(T) \
+  (ref(T))calloc(1, sizeof(T))
+
+#define sfree(R) \
+  free(R)
+
+#define _(R) \
+  R
+
+#endif
