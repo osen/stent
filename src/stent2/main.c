@@ -10,7 +10,8 @@
 #define SSTREAM_TEST
 #define FILE_TEST
 */
-#define EMP_REF_TEST
+#define EMP_VECTOR_TEST
+#define INT_VECTOR_TEST
 
 struct Employee
 {
@@ -63,14 +64,17 @@ ref(FILE) fopen_s(const char *path, const char *mode)
 int main()
 {
 #ifdef EMP_REF_TEST
+{
   ref(struct Employee) emp = NULL;
 
   emp = EmployeeCreate();
   EmployeeInfo(emp);
   EmployeeDestroy(emp);
+}
 #endif
 
 #ifdef INT_REF_TEST
+{
   ref(int) i = NULL;
 
   i = salloc(int);
@@ -80,9 +84,11 @@ int main()
   ++(*_(i));
   printf("Integer ref is %i\n", *_(i));
   sfree(i);
+}
 #endif
 
 #ifdef INT_VECTOR_TEST
+{
   vector(int) ages = NULL;
 
   ages = vector_new(int);
@@ -93,9 +99,11 @@ int main()
     (int)vector_size(ages), vector_at(ages, 0));
 
   vector_delete(ages);
+}
 #endif
 
 #ifdef EMP_VECTOR_TEST
+{
   vector(ref(struct Employee)) emps = NULL;
   int i = 0;
 
@@ -118,6 +126,7 @@ int main()
   }
 
   vector_delete(emps);
+}
 #endif
 
 #ifdef SSTREAM_TEST

@@ -33,7 +33,7 @@ void _sinit()
   }
 }
 
-void **_salloc(size_t size, const char *type, void *placement)
+ref(void) _salloc(size_t size, const char *type, void *placement)
 {
   ref(void) rtn = NULL;
   struct _StentBlock *sb = NULL;
@@ -79,7 +79,7 @@ void **_salloc(size_t size, const char *type, void *placement)
   return rtn;
 }
 
-void _sfree(void **ptr, const char *file, size_t line, int dummy)
+void _sfree(ref(void) ptr, const char *file, size_t line, int dummy)
 {
   struct _StentAllocation *allocation = NULL;
 
@@ -91,7 +91,7 @@ void _sfree(void **ptr, const char *file, size_t line, int dummy)
   allocation->expired = 1;
 }
 
-int _svalid(void **ptr, const char *file, size_t line, int dummy)
+int _svalid(ref(void) ptr, const char *file, size_t line, int dummy)
 {
   struct _StentAllocation *allocation = NULL;
 
@@ -109,6 +109,8 @@ int _svalid(void **ptr, const char *file, size_t line, int dummy)
   return 1;
 }
 
+#endif
+
 /***************************************************
  * Vector
  ***************************************************/
@@ -121,29 +123,49 @@ struct _StentVector
   size_t elementSize;
 };
 
-void ***_vector_new(size_t size, const char *type)
+#ifdef STENT_ENABLE
+vector(void) _vector_new(size_t size, const char *type)
+#else
+vector(void) _vector_new(size_t size)
+#endif
 {
   ref(struct _StentVector) rtn = NULL;
 
+#ifdef STENT_ENABLE
   rtn = (ref(struct _StentVector))_salloc(sizeof(struct _StentVector),
     type, NULL);
+#else
+  rtn = salloc(struct _StentVector);
+#endif
 
   _(rtn)->elementSize = size;
 
-  return (void ***)rtn;
+  return (vector(void))rtn;
 }
 
-void _vector_delete(void ***ptr, const char *file, size_t line, int dummy)
+#ifdef STENT_ENABLE
+void _vector_delete(vector(void) ptr, const char *file, size_t line, int dummy)
+#else
+void _vector_delete(vector(void) ptr)
+#endif
 {
   ref(struct _StentVector) v = NULL;
 
   v = (ref(struct _StentVector))ptr;
   free(_(v)->data);
 
+#ifdef STENT_ENABLE
   _sfree((void **)ptr, file, line, 0);
+#else
+  sfree((void **)ptr);
+#endif
 }
 
-size_t _vector_size(void ***ptr, int dummy)
+#ifdef STENT_ENABLE
+size_t _vector_size(vector(void) ptr, int dummy)
+#else
+size_t _vector_size(vector(void) ptr)
+#endif
 {
   ref(struct _StentVector) v = NULL;
 
@@ -152,7 +174,11 @@ size_t _vector_size(void ***ptr, int dummy)
   return _(v)->size;
 }
 
-void _vector_resize(void ***ptr, size_t size, int dummy)
+#ifdef STENT_ENABLE
+void _vector_resize(vector(void) ptr, size_t size, int dummy)
+#else
+void _vector_resize(vector(void) ptr, size_t size)
+#endif
 {
   ref(struct _StentVector) v = NULL;
   size_t s = 0;
@@ -193,7 +219,7 @@ void _vector_resize(void ***ptr, size_t size, int dummy)
   _(v)->size = size;
 }
 
-size_t _vector_valid(void ***ptr, size_t idx)
+size_t _vector_valid(vector(void) ptr, size_t idx)
 {
   ref(struct _StentVector) v = NULL;
 
@@ -207,5 +233,3 @@ size_t _vector_valid(void ***ptr, size_t idx)
   fprintf(stderr, "Error: Index out of bounds\n");
   abort();
 }
-
-#endif
