@@ -10,7 +10,7 @@
 #define SSTREAM_TEST
 #define FILE_TEST
 */
-#define FILE_TEST
+#define EMP_REF_TEST
 
 struct Employee
 {
@@ -112,7 +112,9 @@ int main()
   for(i = 0; i < vector_size(emps); i++)
   {
     EmployeeInfo(vector_at(emps, i));
-    /* _(vector_at(emps, i))->age = 8; */
+/*
+    _(vector_at(emps, i))->age = 8;
+*/
   }
 
   vector_delete(emps);

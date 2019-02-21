@@ -13,7 +13,7 @@ struct _StentAllocation
 {
   void *ptr;
   int expired;
-  char *type;
+  const char *type;
 };
 
 struct _StentBlock
@@ -29,11 +29,11 @@ void _sinit()
 {
   if(!_sblocks)
   {
-    _sblocks = calloc(1, sizeof(*_sblocks));
+    _sblocks = (struct _StentBlock *)calloc(1, sizeof(*_sblocks));
   }
 }
 
-void **_salloc(size_t size, char *type, void *placement)
+void **_salloc(size_t size, const char *type, void *placement)
 {
   ref(void) rtn = NULL;
   struct _StentBlock *sb = NULL;
@@ -71,7 +71,7 @@ void **_salloc(size_t size, char *type, void *placement)
   if(_sblocks->count >= STENT_BLOCKSIZE)
   {
     fprintf(stderr, "Warning: Adding allocation blocks\n");
-    sb = calloc(1, sizeof(*_sblocks));
+    sb = (struct _StentBlock *)calloc(1, sizeof(*_sblocks));
     sb->next = _sblocks;
     _sblocks = sb;
   }
@@ -79,7 +79,7 @@ void **_salloc(size_t size, char *type, void *placement)
   return rtn;
 }
 
-void _sfree(void **ptr, char *file, size_t line, int dummy)
+void _sfree(void **ptr, const char *file, size_t line, int dummy)
 {
   struct _StentAllocation *allocation = NULL;
 
@@ -91,7 +91,7 @@ void _sfree(void **ptr, char *file, size_t line, int dummy)
   allocation->expired = 1;
 }
 
-int _svalid(void **ptr, char *file, size_t line, int dummy)
+int _svalid(void **ptr, const char *file, size_t line, int dummy)
 {
   struct _StentAllocation *allocation = NULL;
 
@@ -121,7 +121,7 @@ struct _StentVector
   size_t elementSize;
 };
 
-void ***_vector_new(size_t size, char *type)
+void ***_vector_new(size_t size, const char *type)
 {
   ref(struct _StentVector) rtn = NULL;
 
@@ -133,7 +133,7 @@ void ***_vector_new(size_t size, char *type)
   return (void ***)rtn;
 }
 
-void _vector_delete(void ***ptr, char *file, size_t line, int dummy)
+void _vector_delete(void ***ptr, const char *file, size_t line, int dummy)
 {
   ref(struct _StentVector) v = NULL;
 
