@@ -41,6 +41,9 @@
 #define __(R) \
   (*_(R))
 
+#define reset(R) \
+  memset(_(R), 0, sizeof(*_(R)));
+
 ref(void) _salloc(size_t size, const char *type, void *placement);
 void _sfree(ref(void) ptr, const char *file, size_t line);
 int _svalid(ref(void) ptr, const char *file, size_t line);
@@ -112,6 +115,9 @@ size_t _vector_valid(vector(void) ptr, size_t idx);
 
 #define _(R) \
   R
+
+#define reset(R) \
+  memset(_(R), 0, sizeof(*_(R)));
 
 #define vector(T) \
   T **

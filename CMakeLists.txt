@@ -13,3 +13,9 @@ add_executable(emptest
   src/emptest/main.c
 )
 target_link_libraries(emptest stent)
+
+add_executable(socket
+  src/socket/main.c
+  src/socket/socket.c
+)
+target_link_libraries(socket stent)

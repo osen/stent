@@ -1,3 +1,5 @@
+#include <stent.h>
+
 #define SOCKET_EVENT_CLOSE 1
 #define SOCKET_EVENT_CONNECTED 2
 #define SOCKET_EVENT_MESSAGE 3
@@ -5,6 +7,36 @@
 
 struct Socket;
 struct SocketEvent;
+
+void SocketClose(ref(struct Socket) ctx);
+ref(struct SocketEvent) SocketWaitForEvent(ref(struct Socket) ctx, int t);
+
+ref(struct Socket) SocketListen(int port);
+
+int SocketEventType(ref(struct SocketEvent) ctx);
+ref(struct Socket) SocketEventClient(ref(struct SocketEvent) ctx);
+
+typedef struct Socket Socket;
+typedef struct SocketEvent SocketEvent;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#ifdef ASASASAS
 
 struct Socket
 {
@@ -66,3 +98,5 @@ while(1)
 }
 
 */
+
+#endif
