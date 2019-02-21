@@ -79,19 +79,19 @@ ref(void) _salloc(size_t size, const char *type, void *placement)
   return rtn;
 }
 
-void _sfree(ref(void) ptr, const char *file, size_t line, int dummy)
+void _sfree(ref(void) ptr, const char *file, size_t line)
 {
   struct _StentAllocation *allocation = NULL;
 
   _sinit();
-  _svalid(ptr, file, line, 0);
+  _svalid(ptr, file, line);
 
   allocation = (struct _StentAllocation *)ptr;
   free(allocation->ptr);
   allocation->expired = 1;
 }
 
-int _svalid(ref(void) ptr, const char *file, size_t line, int dummy)
+int _svalid(ref(void) ptr, const char *file, size_t line)
 {
   struct _StentAllocation *allocation = NULL;
 
@@ -144,7 +144,7 @@ vector(void) _vector_new(size_t size)
 }
 
 #ifdef STENT_ENABLE
-void _vector_delete(vector(void) ptr, const char *file, size_t line, int dummy)
+void _vector_delete(vector(void) ptr, const char *file, size_t line)
 #else
 void _vector_delete(vector(void) ptr)
 #endif
@@ -155,17 +155,13 @@ void _vector_delete(vector(void) ptr)
   free(_(v)->data);
 
 #ifdef STENT_ENABLE
-  _sfree((void **)ptr, file, line, 0);
+  _sfree((void **)ptr, file, line);
 #else
   sfree((void **)ptr);
 #endif
 }
 
-#ifdef STENT_ENABLE
-size_t _vector_size(vector(void) ptr, int dummy)
-#else
 size_t _vector_size(vector(void) ptr)
-#endif
 {
   ref(struct _StentVector) v = NULL;
 
@@ -174,11 +170,7 @@ size_t _vector_size(vector(void) ptr)
   return _(v)->size;
 }
 
-#ifdef STENT_ENABLE
-void _vector_resize(vector(void) ptr, size_t size, int dummy)
-#else
 void _vector_resize(vector(void) ptr, size_t size)
-#endif
 {
   ref(struct _StentVector) v = NULL;
   size_t s = 0;

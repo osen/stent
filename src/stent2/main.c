@@ -12,6 +12,9 @@
 */
 #define EMP_VECTOR_TEST
 #define INT_VECTOR_TEST
+#define EMP_REF_TEST
+#define INT_REF_TEST
+#define FILE_TEST
 
 struct Employee
 {
@@ -130,6 +133,7 @@ int main()
 #endif
 
 #ifdef SSTREAM_TEST
+{
   sstream ss = NULL;
 
   ss = sstream_new();
@@ -139,9 +143,11 @@ int main()
   printf("StringStream: %s\n", sstream_cstr(ss));
 
   sstream_delete(ss);
+}
 #endif
 
 #ifdef FILE_TEST
+{
   ref(FILE) f = NULL;
   char text[128];
 
@@ -149,7 +155,7 @@ int main()
   /* printf("[%s]\n", fgets_s(text, 128, f)); */
   /* sfree(f); */
   fgets_s(text, 128, f);
-
+}
 #endif
 
   return 0;
