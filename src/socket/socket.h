@@ -6,12 +6,22 @@
 struct Socket;
 struct SocketEvent;
 
+struct Socket
+{
+  ref(int) fd;
+  vector(unsigned char) buffer;
+  ref(struct SocketEvent) event;
+  /* ref(struct SocketEvent) events; */
+  ref(struct SocketEvent) (*pollFunc)(ref(struct Socket), int);
+};
+
 struct SocketEvent
 {
   int type;
   sstream message;
   sstream reason;
   ref(struct Socket) client;
+  /* ref(struct SocketEvent) next; */
 };
 
 int SocketEventType(ref(struct SocketEvent) e);
@@ -21,7 +31,7 @@ ref(struct Socket) SocketEventClient(ref(struct SocketEvent) e);
 
 void SocketClose(ref(struct Socket) s);
 ref(struct SocketEvent) SocketPollForEvent(ref(struct Socket) s);
-ref(struct SocketEvent) SocketWaitForEvent(ref(struct Socket) s, size_t t);
+ref(struct SocketEvent) SocketWaitForEvent(ref(struct Socket) s, int t);
 
 ref(struct Socket) SocketListen(int port);
 
