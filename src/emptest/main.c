@@ -10,15 +10,12 @@
 #define SSTREAM_TEST
 #define FILE_TEST
 */
-#define EMP_VECTOR_TEST
-#define INT_VECTOR_TEST
 #define EMP_REF_TEST
-#define INT_REF_TEST
-#define FILE_TEST
 
 struct Employee
 {
   int age;
+  vector(unsigned char) buffer;
 };
 
 ref(struct Employee) EmployeeCreate()
@@ -27,18 +24,25 @@ ref(struct Employee) EmployeeCreate()
 
   rtn = salloc(struct Employee);
   _(rtn)->age = 28;
+  _(rtn)->buffer = vector_new(unsigned char);
+  vector_push_back(_(rtn)->buffer, 'a');
+  vector_push_back(_(rtn)->buffer, 'b');
 
   return rtn;
 }
 
 void EmployeeDestroy(ref(struct Employee) ctx)
 {
+  vector_delete(_(ctx)->buffer);
   sfree(ctx);
 }
 
 void EmployeeInfo(ref(struct Employee) ctx)
 {
   printf("Age: %i\n", _(ctx)->age);
+  printf("Buff: %i\n", (int)vector_at(_(ctx)->buffer, 0));
+  vector_at(_(ctx)->buffer, 0) = '8';
+  vector_at(_(ctx)->buffer, 1) = '8';
 }
 
 void EmployeeInfoSt(struct Employee *ctx)

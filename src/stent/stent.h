@@ -87,7 +87,7 @@ int _svalid(ref(void) ptr, const char *file, size_t line);
   while(0)
 
 #define vector_at(V, I) \
-   ((&V == &V) ? _(V)[0][_vector_valid((vector(void))V, I)] : _(V)[0][0])
+  (_(V)[0][_vector_valid((vector(void))V, (1 || memcmp(&V, &V, 0) ? I : 0))])
 
 vector(void) _vector_new(size_t size, const char *type);
 void _vector_delete(vector(void) ptr, const char *file, size_t line);
