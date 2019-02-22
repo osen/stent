@@ -80,7 +80,6 @@ ref(struct Socket) SocketListen(int port)
 {
   ref(struct Socket) rtn = NULL;
   struct sockaddr_in addr = {0};
-  struct sockaddr addr2 = {0};
 
   rtn = _SocketCreate();
   _(rtn)->fd = socket(AF_INET, SOCK_STREAM, 0);

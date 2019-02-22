@@ -10,7 +10,7 @@
 #define SSTREAM_TEST
 #define FILE_TEST
 */
-#define EMP_REF_TEST
+#define INT_VECTOR_TEST
 
 struct Employee
 {
@@ -97,13 +97,74 @@ int main()
 #ifdef INT_VECTOR_TEST
 {
   vector(int) ages = NULL;
+  int i = 0;
 
   ages = vector_new(int);
+
+  printf("Int Vector size %i\n", (int)vector_size(ages));
+
+  vector_push_back(ages, 0);
+  vector_push_back(ages, 1);
+  vector_push_back(ages, 2);
+  vector_push_back(ages, 3);
+  vector_push_back(ages, 4);
+  vector_push_back(ages, 5);
+  vector_push_back(ages, 6);
+  vector_push_back(ages, 7);
+  vector_push_back(ages, 8);
   vector_push_back(ages, 9);
-  vector_push_back(ages, 99);
 
   printf("Int Vector size %i [0] %i\n",
     (int)vector_size(ages), vector_at(ages, 0));
+
+  printf("?[0123456789]\n");
+  printf("![");
+  for(i = 0; i < vector_size(ages); i++)
+  {
+    printf("%i", vector_at(ages, i));
+  }
+  printf("]\n");
+
+  printf("?[0189]\n");
+  vector_erase(ages, 2, 6);
+
+  printf("![");
+  for(i = 0; i < vector_size(ages); i++)
+  {
+    printf("%i", vector_at(ages, i));
+  }
+  printf("]\n");
+
+  printf("?[189]\n");
+  vector_erase(ages, 0, 1);
+  printf("![");
+  for(i = 0; i < vector_size(ages); i++)
+  {
+    printf("%i", vector_at(ages, i));
+  }
+  printf("]\n");
+
+  printf("?[18]\n");
+  vector_erase(ages, 2, 1);
+  printf("![");
+  for(i = 0; i < vector_size(ages); i++)
+  {
+    printf("%i", vector_at(ages, i));
+  }
+  printf("]\n");
+
+  printf("?[]\n");
+/*
+  vector_erase(ages, 1, 1);
+  vector_erase(ages, 0, 1);
+*/
+  vector_erase(ages, 0, 2);
+  printf("![");
+  for(i = 0; i < vector_size(ages); i++)
+  {
+    printf("%i", vector_at(ages, i));
+  }
+  printf("]\n");
 
   vector_delete(ages);
 }

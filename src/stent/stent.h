@@ -75,6 +75,16 @@ int _svalid(ref(void) ptr, const char *file, size_t line);
     memcmp(V[0][0], V[0][0], 0)) ? \
     _vector_size((vector(void))V) : 0)
 
+#define vector_erase(V, I, N) \
+  do \
+  { \
+    memcmp(&V, &V, 0); \
+    memcmp(V[0], V[0], 0); \
+    memcmp(V[0][0], V[0][0], 0); \
+    _vector_erase((vector(void))V, I, N); \
+  } \
+  while(0)
+
 #define vector_push_back(V, E) \
   do \
   { \
@@ -94,6 +104,7 @@ void _vector_delete(vector(void) ptr, const char *file, size_t line);
 size_t _vector_size(vector(void) ptr);
 void _vector_resize(vector(void) ptr, size_t size);
 size_t _vector_valid(vector(void) ptr, size_t idx);
+void _vector_erase(vector(void) ptr, size_t idx, size_t num);
 
 #else
 
@@ -141,6 +152,9 @@ size_t _vector_valid(vector(void) ptr, size_t idx);
 
 #define vector_at(V, I) \
    (_(V)[0][_vector_valid((vector(void))V, I)])
+
+#define vector_erase(V, I, N) \
+  _vector_erase((vector(void))V, I, N);
 
 vector(void) _vector_new(size_t size);
 void _vector_delete(vector(void) ptr);

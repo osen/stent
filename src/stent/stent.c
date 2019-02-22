@@ -236,3 +236,42 @@ size_t _vector_valid(vector(void) ptr, size_t idx)
   fprintf(stderr, "Error: Index out of bounds\n");
   abort();
 }
+
+void _vector_erase(vector(void) ptr, size_t idx, size_t num)
+{
+  ref(struct _StentVector) v = NULL;
+  char *dest = NULL;
+  char *src = NULL;
+  size_t tm = 0;
+
+  v = (ref(struct _StentVector))ptr;
+
+  if(idx >= _(v)->size ||
+    idx + num > _(v)->size)
+  {
+    fprintf(stderr, "Error: Index out of bounds\n");
+    abort();
+  }
+
+  if(!num)
+  {
+    fprintf(stderr, "Error: Invalid size specified\n");
+    abort();
+  }
+
+  dest = _(v)->data;
+  dest += (idx * _(v)->elementSize);
+
+  src = dest;
+  src += (num * _(v)->elementSize);
+
+  tm = (_(v)->size - (idx + num)) * _(v)->elementSize;
+
+  if(tm)
+  {
+    memmove(dest, src, tm);
+  }
+
+  _(v)->size -= num;
+}
+
