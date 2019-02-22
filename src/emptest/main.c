@@ -5,12 +5,13 @@
 /*
 #define EMP_VECTOR_TEST
 #define INT_VECTOR_TEST
+#define FLOAT_VECTOR_TEST
 #define EMP_REF_TEST
 #define INT_REF_TEST
 #define SSTREAM_TEST
 #define FILE_TEST
 */
-#define INT_VECTOR_TEST
+#define FLOAT_VECTOR_TEST
 
 struct Employee
 {
@@ -91,6 +92,44 @@ int main()
   ++(*_(i));
   printf("Integer ref is %i\n", *_(i));
   sfree(i);
+}
+#endif
+
+#ifdef FLOAT_VECTOR_TEST
+{
+  vector(float) values = NULL;
+  vector(float) missing = NULL;
+  int i = 0;
+
+  values = vector_new(float);
+  vector_push_back(values, 0);
+  vector_push_back(values, 1);
+  vector_push_back(values, 2);
+  vector_push_back(values, 6);
+  vector_push_back(values, 7);
+  vector_push_back(values, 8);
+  vector_push_back(values, 9);
+
+  missing = vector_new(float);
+  vector_push_back(missing, 3);
+  vector_push_back(missing, 4);
+  vector_push_back(missing, 5);
+
+/*
+  vector_insert(values, 3, missing, 0, vector_size(missing);
+*/
+
+  vector_delete(missing);
+
+  printf("?[0123456789]\n");
+  printf("![");
+  for(i = 0; i < vector_size(values); i++)
+  {
+    printf("%i", (int)vector_at(values, i));
+  }
+  printf("]\n");
+
+  vector_delete(values);
 }
 #endif
 
