@@ -115,10 +115,7 @@ int main()
   vector_push_back(missing, 4);
   vector_push_back(missing, 5);
 
-/*
-  vector_insert(values, 3, missing, 0, vector_size(missing);
-*/
-
+  vector_insert(values, 3, missing, 0, vector_size(missing));
   vector_delete(missing);
 
   printf("?[0123456789]\n");
@@ -253,7 +250,7 @@ int main()
 #ifdef FILE_TEST
 {
   ref(FILE) f = NULL;
-  char text[128];
+  char text[128] = {0};
 
   f = fopen_s("a.out", "r");
   /* printf("[%s]\n", fgets_s(text, 128, f)); */

@@ -255,8 +255,7 @@ void _vector_erase(vector(void) ptr, size_t idx, size_t num)
 
   if(!num)
   {
-    fprintf(stderr, "Error: Invalid size specified\n");
-    abort();
+    return;
   }
 
   dest = _(v)->data;
@@ -275,3 +274,54 @@ void _vector_erase(vector(void) ptr, size_t idx, size_t num)
   _(v)->size -= num;
 }
 
+void _vector_insert(vector(void) ptr, size_t before,
+  vector(void) source, size_t idx, size_t num)
+{
+  ref(struct _StentVector) s = NULL;
+  ref(struct _StentVector) d = NULL;
+  char *dest = NULL;
+  char *src = NULL;
+  size_t tm = 0;
+
+  s = (ref(struct _StentVector))source;
+  d = (ref(struct _StentVector))ptr;
+
+  if(s == d)
+  {
+    fprintf(stderr, "Error: Source and desination must not match\n");
+    abort();
+  }
+
+  if(!num)
+  {
+    return;
+  }
+
+  if(before > _(d)->size)
+  {
+    fprintf(stderr, "Error: Invalid index specified. Non contiguous\n");
+    abort();
+  }
+
+  if(idx >= _(s)->size ||
+    idx + num > _(s)->size)
+  {
+    fprintf(stderr, "Error: Index out of bounds on source\n");
+    abort();
+  }
+
+  tm = (_(d)->size - before) * _(d)->elementSize;
+
+  _vector_resize(ptr, _(d)->size + num);
+
+  src = _(d)->data;
+  src += (before * _(d)->elementSize);
+  dest = src;
+  dest += (num * _(d)->elementSize);
+  memmove(dest, src, tm);
+
+  dest = src;
+  src = _(s)->data;
+  src += (idx * _(d)->elementSize);
+  memcpy(dest, src, num * _(s)->elementSize);
+}
