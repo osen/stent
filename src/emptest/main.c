@@ -17,6 +17,7 @@ struct Employee
 {
   int age;
   vector(unsigned char) buffer;
+  int salary;
 };
 
 ref(struct Employee) EmployeeCreate()
@@ -44,11 +45,13 @@ void EmployeeInfo(ref(struct Employee) ctx)
   printf("Buff: %i\n", (int)vector_at(_(ctx)->buffer, 0));
   vector_at(_(ctx)->buffer, 0) = '8';
   vector_at(_(ctx)->buffer, 1) = '8';
+  printf("Salary: %i\n", _(ctx)->salary);
 }
 
 void EmployeeInfoSt(struct Employee *ctx)
 {
   printf("Age: %i\n", ctx->age);
+  printf("Salary: %i\n", ctx->salary);
 }
 
 #ifdef FILE_TEST
@@ -76,6 +79,8 @@ int main()
   ref(struct Employee) emp = NULL;
 
   emp = EmployeeCreate();
+  _(emp)->salary = 10;
+  _(emp)->salary++;
   EmployeeInfo(emp);
   EmployeeDestroy(emp);
 }
