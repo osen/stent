@@ -16,7 +16,7 @@
 struct Employee
 {
   int age;
-  vector(unsigned char) buffer;
+  ref(vector(unsigned char)) buffer;
 };
 
 ref(struct Employee) EmployeeCreate()
@@ -97,8 +97,8 @@ int main()
 
 #ifdef FLOAT_VECTOR_TEST
 {
-  vector(float) values = NULL;
-  vector(float) missing = NULL;
+  ref(vector(float)) values = NULL;
+  ref(vector(float)) missing = NULL;
   int i = 0;
 
   values = vector_new(float);
@@ -137,7 +137,7 @@ int main()
 
 #ifdef INT_VECTOR_TEST
 {
-  vector(int) ages = NULL;
+  ref(vector(int)) ages = NULL;
   int i = 0;
 
   ages = vector_new(int);
@@ -213,7 +213,7 @@ int main()
 
 #ifdef EMP_VECTOR_TEST
 {
-  vector(ref(struct Employee)) emps = NULL;
+  ref(vector(ref(struct Employee))) emps = NULL;
   int i = 0;
 
   emps = vector_new(ref(struct Employee));

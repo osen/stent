@@ -135,9 +135,9 @@ struct _StentVector
 };
 
 #ifdef STENT_ENABLE
-vector(void) _vector_new(size_t size, const char *type)
+ref(vector(void)) _vector_new(size_t size, const char *type)
 #else
-vector(void) _vector_new(size_t size)
+ref(vector(void)) _vector_new(size_t size)
 #endif
 {
   ref(struct _StentVector) rtn = NULL;
@@ -151,13 +151,13 @@ vector(void) _vector_new(size_t size)
 
   _(rtn)->elementSize = size;
 
-  return (vector(void))rtn;
+  return (ref(vector(void)))rtn;
 }
 
 #ifdef STENT_ENABLE
-void _vector_delete(vector(void) ptr, const char *file, size_t line)
+void _vector_delete(ref(vector(void)) ptr, const char *file, size_t line)
 #else
-void _vector_delete(vector(void) ptr)
+void _vector_delete(ref(vector(void)) ptr)
 #endif
 {
   ref(struct _StentVector) v = NULL;
@@ -166,13 +166,13 @@ void _vector_delete(vector(void) ptr)
   free(_(v)->data);
 
 #ifdef STENT_ENABLE
-  _sfree((void **)ptr, file, line);
+  _sfree((ref(void))ptr, file, line);
 #else
-  sfree((void **)ptr);
+  sfree((ref(void))ptr);
 #endif
 }
 
-size_t _vector_size(vector(void) ptr)
+size_t _vector_size(ref(vector(void)) ptr)
 {
   ref(struct _StentVector) v = NULL;
 
@@ -181,7 +181,7 @@ size_t _vector_size(vector(void) ptr)
   return _(v)->size;
 }
 
-void _vector_resize(vector(void) ptr, size_t size)
+void _vector_resize(ref(vector(void)) ptr, size_t size)
 {
   ref(struct _StentVector) v = NULL;
   size_t s = 0;
@@ -222,7 +222,7 @@ void _vector_resize(vector(void) ptr, size_t size)
   _(v)->size = size;
 }
 
-size_t _vector_valid(vector(void) ptr, size_t idx)
+size_t _vector_valid(ref(vector(void)) ptr, size_t idx)
 {
   ref(struct _StentVector) v = NULL;
 
@@ -237,7 +237,7 @@ size_t _vector_valid(vector(void) ptr, size_t idx)
   abort();
 }
 
-void _vector_erase(vector(void) ptr, size_t idx, size_t num)
+void _vector_erase(ref(vector(void)) ptr, size_t idx, size_t num)
 {
   ref(struct _StentVector) v = NULL;
   char *dest = NULL;
@@ -274,8 +274,8 @@ void _vector_erase(vector(void) ptr, size_t idx, size_t num)
   _(v)->size -= num;
 }
 
-void _vector_insert(vector(void) ptr, size_t before,
-  vector(void) source, size_t idx, size_t num)
+void _vector_insert(ref(vector(void)) ptr, size_t before,
+  ref(vector(void)) source, size_t idx, size_t num)
 {
   ref(struct _StentVector) s = NULL;
   ref(struct _StentVector) d = NULL;
