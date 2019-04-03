@@ -9,7 +9,7 @@
 struct Socket
 {
   int fd;
-  ref(vector(unsigned char)) buffer;
+  vector(unsigned char) buffer;
   ref(struct SocketEvent) event;
   ref(struct SocketEvent) (*pollFunc)(ref(struct Socket), int);
 };

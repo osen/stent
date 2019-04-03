@@ -8,9 +8,6 @@
 
 #define STENT_BLOCKSIZE 1024
 
-#define vector(T) \
-  T *
-
 #ifdef STENT_ENABLE
 
 /***************************************************
@@ -55,13 +52,15 @@ int _svalid(ref(void) ptr, const char *file, size_t line);
  * Vector
  ***************************************************/
 
+#define vector(T) \
+  T ***
+
 #define vector_new(T) \
-  (ref(vector(T)))_vector_new(sizeof(T), "vector("#T")")
+  (vector(T))_vector_new(sizeof(T), "vector("#T")")
 
 #define vector_delete(V) \
   do \
   { \
-    _svalid((ref(void))V, __FILE__, __LINE__); \
     memcmp(&V, &V, 0); \
     memcmp(V[0], V[0], 0); \
     memcmp(V[0][0], V[0][0], 0); \
@@ -74,7 +73,7 @@ int _svalid(ref(void) ptr, const char *file, size_t line);
     memcmp(&V, &V, 0) || \
     memcmp(V[0], V[0], 0) || \
     memcmp(V[0][0], V[0][0], 0)) ? \
-    _vector_size((ref(vector(void)))V) : 0)
+    _vector_size((vector(void))V) : 0)
 
 #define vector_erase(V, I, N) \
   do \
@@ -82,7 +81,7 @@ int _svalid(ref(void) ptr, const char *file, size_t line);
     memcmp(&V, &V, 0); \
     memcmp(V[0], V[0], 0); \
     memcmp(V[0][0], V[0][0], 0); \
-    _vector_erase((ref(vector(void)))V, I, N); \
+    _vector_erase((vector(void))V, I, N); \
   } \
   while(0)
 
@@ -92,13 +91,13 @@ int _svalid(ref(void) ptr, const char *file, size_t line);
     memcmp(&V, &V, 0); \
     memcmp(V[0], V[0], 0); \
     memcmp(V[0][0], V[0][0], 0); \
-    _vector_resize((ref(vector(void)))V, vector_size(V) + 1); \
+    _vector_resize((vector(void))V, vector_size(V) + 1); \
     _(V)[0][vector_size(V) - 1] = E; \
   } \
   while(0)
 
 #define vector_at(V, I) \
-  (_(V)[0][_vector_valid((ref(vector(void)))V, (1 || memcmp(&V, &V, 0) ? I : 0))])
+  (_(V)[0][_vector_valid((vector(void))V, (1 || memcmp(&V, &V, 0) ? I : 0))])
 
 #define vector_insert(V, B, S, I, N) \
   do \
@@ -110,19 +109,19 @@ int _svalid(ref(void) ptr, const char *file, size_t line);
     memcmp(S[0], S[0], 0); \
     memcmp(S[0][0], S[0][0], 0); \
     if(V == S){} \
-    _vector_insert((ref(vector(void)))V, B, (ref(vector(void)))S, I, N); \
+    _vector_insert((vector(void))V, B, (vector(void))S, I, N); \
   } \
   while(0)
 
-ref(vector(void)) _vector_new(size_t size, const char *type);
-void _vector_delete(ref(vector(void)) ptr, const char *file, size_t line);
-size_t _vector_size(ref(vector(void)) ptr);
-void _vector_resize(ref(vector(void)) ptr, size_t size);
-size_t _vector_valid(ref(vector(void)) ptr, size_t idx);
-void _vector_erase(ref(vector(void)) ptr, size_t idx, size_t num);
+vector(void) _vector_new(size_t size, const char *type);
+void _vector_delete(vector(void) ptr, const char *file, size_t line);
+size_t _vector_size(vector(void) ptr);
+void _vector_resize(vector(void) ptr, size_t size);
+size_t _vector_valid(vector(void) ptr, size_t idx);
+void _vector_erase(vector(void) ptr, size_t idx, size_t num);
 
-void _vector_insert(ref(vector(void)) ptr, size_t before,
-  ref(vector(void)) source, size_t idx, size_t num);
+void _vector_insert(vector(void) ptr, size_t before,
+  vector(void) source, size_t idx, size_t num);
 
 #else
 
@@ -148,40 +147,43 @@ void _vector_insert(ref(vector(void)) ptr, size_t before,
 #define reset(R) \
   memset(_(R), 0, sizeof(*_(R)));
 
+#define vector(T) \
+  T **
+
 #define vector_new(T) \
-  (ref(vector(T)))_vector_new(sizeof(T))
+  (vector(T))_vector_new(sizeof(T))
 
 #define vector_delete(V) \
-  _vector_delete((ref(vector(void)))V)
+  _vector_delete((vector(void))V)
 
 #define vector_size(V) \
-  _vector_size((ref(vector(void)))V)
+  _vector_size((vector(void))V)
 
 #define vector_push_back(V, E) \
   do \
   { \
-    _vector_resize((ref(vector(void)))V, vector_size(V) + 1); \
+    _vector_resize((vector(void))V, vector_size(V) + 1); \
     _(V)[0][vector_size(V) - 1] = E; \
   } \
   while(0)
 
 #define vector_at(V, I) \
-   (_(V)[0][_vector_valid((ref(vector(void)))V, I)])
+   (_(V)[0][_vector_valid((vector(void))V, I)])
 
 #define vector_erase(V, I, N) \
-  _vector_erase((ref(vector(void)))V, I, N);
+  _vector_erase((vector(void))V, I, N);
 
 #define vector_insert(V, B, S, I, N) \
-  _vector_insert((ref(vector(void)))V, B, (ref(vector(void)))S, I, N)
+  _vector_insert((vector(void))V, B, (vector(void))S, I, N)
 
-ref(vector(void)) _vector_new(size_t size);
-void _vector_delete(ref(vector(void)) ptr);
-size_t _vector_size(ref(vector(void)) ptr);
-void _vector_resize(ref(vector(void)) ptr, size_t size);
-size_t _vector_valid(ref(vector(void)) ptr, size_t idx);
-void _vector_erase(ref(vector(void)) ptr, size_t idx, size_t num);
+vector(void) _vector_new(size_t size);
+void _vector_delete(vector(void) ptr);
+size_t _vector_size(vector(void) ptr);
+void _vector_resize(vector(void) ptr, size_t size);
+size_t _vector_valid(vector(void) ptr, size_t idx);
+void _vector_erase(vector(void) ptr, size_t idx, size_t num);
 
-void _vector_insert(ref(vector(void)) ptr, size_t before,
-  ref(vector(void)) source, size_t idx, size_t num);
+void _vector_insert(vector(void) ptr, size_t before,
+  vector(void) source, size_t idx, size_t num);
 
 #endif
