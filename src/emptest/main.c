@@ -105,10 +105,15 @@ int main()
   vector_push_back(values, 0);
   vector_push_back(values, 1);
   vector_push_back(values, 2);
+  vector_push_back(values, 3);
+  vector_push_back(values, 4);
+  vector_push_back(values, 5);
   vector_push_back(values, 6);
   vector_push_back(values, 7);
   vector_push_back(values, 8);
   vector_push_back(values, 9);
+
+  vector_erase(values, 3, 3);
 
   missing = vector_new(float);
   vector_push_back(missing, 3);
