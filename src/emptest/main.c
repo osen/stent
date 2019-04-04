@@ -10,8 +10,9 @@
 #define INT_REF_TEST
 #define SSTREAM_TEST
 #define FILE_TEST
+#define EXCEPTION_TEST
 */
-#define FLOAT_VECTOR_TEST
+#define EXCEPTION_TEST
 
 struct Employee
 {
@@ -72,6 +73,25 @@ ref(FILE) fopen_s(const char *path, const char *mode)
 }
 #endif
 
+#ifdef EXCEPTION_TEST
+void simulate_throw_2(ref(void) e)
+{
+  printf("Simulating throw 2\n");
+  sthrow(0, "A fail 2 occured");
+}
+
+void simulate_throw_1(ref(void) e)
+{
+  printf("Simulating throw 1\n");
+
+  scatch(simulate_throw_2, e)
+  {
+    printf("Something threw 2\n");
+    sthrow(0, "A fail 1 occured");
+  }
+}
+#endif
+
 int main()
 {
 #ifdef EMP_REF_TEST
@@ -82,6 +102,21 @@ int main()
   _(emp)->salary = 10;
   _(emp)->salary++;
   EmployeeInfo(emp);
+  EmployeeDestroy(emp);
+}
+#endif
+
+#ifdef EXCEPTION_TEST
+{
+  ref(struct Employee) emp = NULL;
+
+  emp = EmployeeCreate();
+
+  scatch(simulate_throw_1, emp)
+  {
+    printf("Something threw 1\n");
+  }
+
   EmployeeDestroy(emp);
 }
 #endif

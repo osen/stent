@@ -1,3 +1,6 @@
+#ifndef STENT_STENT_H
+#define STENT_STENT_H
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -7,6 +10,7 @@
 #define STENT_ENABLE
 
 #define STENT_BLOCKSIZE 1024
+#define STENT_EXCEPTION_SIZE 1024
 
 #ifdef STENT_ENABLE
 
@@ -186,5 +190,23 @@ void _vector_erase(vector(void) ptr, size_t idx, size_t num);
 
 void _vector_insert(vector(void) ptr, size_t before,
   vector(void) source, size_t idx, size_t num);
+
+#endif
+
+/***************************************************
+ * Exceptions
+ ***************************************************/
+
+struct Exception
+{
+  int type;
+  char message[STENT_EXCEPTION_SIZE];
+};
+
+#define scatch(F, P) \
+  if(_scatch(F, (ref(void))P)) \
+
+void sthrow(int rc, char *message);
+int _scatch(void (*func)(ref(void)), ref(void) ptr);
 
 #endif

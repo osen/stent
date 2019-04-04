@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <setjmp.h>
 
 #ifdef STENT_ENABLE
 
@@ -23,9 +24,19 @@ struct _StentBlock
   struct _StentBlock *next;
 };
 
-struct _StentBlock *_sblocks;
+static struct _StentBlock *_sblocks;
 
-void _satexit()
+struct _StentCatch
+{
+  jmp_buf buf;
+  struct Exception ex;
+  struct _StentCatch *next;
+};
+
+static struct _StentCatch *_scatchs;
+static size_t _scatchDepth;
+
+static void _satexit()
 {
   struct _StentBlock *sb = NULL;
   size_t ai = 0;
@@ -48,7 +59,7 @@ void _satexit()
   }
 }
 
-void _sinit()
+static void _sinit()
 {
   if(!_sblocks)
   {
@@ -357,4 +368,70 @@ void _vector_insert(vector(void) ptr, size_t before,
   src = _(s)->data;
   src += (idx * _(d)->elementSize);
   memcpy(dest, src, num * _(s)->elementSize);
+}
+
+/***************************************************
+ * Exceptions
+ ***************************************************/
+
+void sthrow(int rc, char *message)
+{
+  struct _StentCatch *sc = NULL;
+  size_t d = 0;
+
+  d = _scatchDepth - 1;
+  sc = _scatchs;
+
+  while(d)
+  {
+    if(!sc->next)
+    {
+      sc->next = (struct _StentCatch *)calloc(1, sizeof(*_scatchs));
+    }
+
+    sc = sc->next;
+    d--;
+  }
+
+  longjmp(sc->buf, 1);
+}
+
+int _scatch(void (*func)(ref(void)), ref(void) ptr)
+{
+  struct _StentCatch *sc = NULL;
+  size_t d = 0;
+
+  _scatchDepth ++;
+  d = _scatchDepth - 1;
+
+  if(!_scatchs)
+  {
+    _scatchs = (struct _StentCatch *)calloc(1, sizeof(*_scatchs));
+  }
+
+  sc = _scatchs;
+
+  while(d)
+  {
+    if(!sc->next)
+    {
+      sc->next = (struct _StentCatch *)calloc(1, sizeof(*_scatchs));
+    }
+
+    sc = sc->next;
+    d--;
+  }
+
+  if(setjmp(sc->buf))
+  {
+    _scatchDepth--;
+
+    return 1;
+  }
+
+  func(ptr);
+
+  _scatchDepth--;
+
+  return 0;
 }
