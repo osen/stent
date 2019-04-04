@@ -25,11 +25,44 @@ struct _StentBlock
 
 struct _StentBlock *_sblocks;
 
+void _satexit()
+{
+  struct _StentBlock *sb = NULL;
+  size_t ai = 0;
+
+  sb = _sblocks;
+
+  while(sb)
+  {
+    for(ai = 0; ai < sb->count; ai++)
+    {
+      if(!sb->allocations[ai].expired)
+      {
+        fprintf(stderr,
+          "Warning: Allocated memory persisted after application exit [%s]\n",
+          sb->allocations[ai].type);
+      }
+    }
+
+    sb = sb->next;
+  }
+}
+
 void _sinit()
 {
   if(!_sblocks)
   {
     _sblocks = (struct _StentBlock *)calloc(1, sizeof(*_sblocks));
+
+    if(!_sblocks)
+    {
+      fprintf(stderr, "Error: Failed to initialize initial block\n");
+
+      abort();
+    }
+
+    fprintf(stderr, "Warning: Debug memory allocator enabled\n");
+    atexit(_satexit);
   }
 }
 

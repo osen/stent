@@ -64,6 +64,7 @@ int _svalid(ref(void) ptr, const char *file, size_t line);
     memcmp(&V, &V, 0); \
     memcmp(V[0], V[0], 0); \
     memcmp(V[0][0], V[0][0], 0); \
+    _(V); \
     _vector_delete((vector(void))V, __FILE__, __LINE__); \
   } \
   while(0)
