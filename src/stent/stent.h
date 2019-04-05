@@ -206,7 +206,7 @@ struct Exception
 #define scatch(E, F, P) \
   if(_scatch(&E, F, (ref(void))P)) \
 
-void sthrow(int rc, char *message);
+void sthrow(int type, const char *message);
 int _scatch(struct Exception *ex, void (*func)(ref(void)), ref(void) ptr);
 
 #endif

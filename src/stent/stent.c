@@ -302,7 +302,7 @@ void _vector_erase(vector(void) ptr, size_t idx, size_t num)
     return;
   }
 
-  dest = _(v)->data;
+  dest = (char *)_(v)->data;
   dest += (idx * _(v)->elementSize);
 
   src = dest;
@@ -358,14 +358,14 @@ void _vector_insert(vector(void) ptr, size_t before,
 
   _vector_resize(ptr, _(d)->size + num);
 
-  src = _(d)->data;
+  src = (char *)_(d)->data;
   src += (before * _(d)->elementSize);
   dest = src;
   dest += (num * _(d)->elementSize);
   memmove(dest, src, tm);
 
   dest = src;
-  src = _(s)->data;
+  src = (char *)_(s)->data;
   src += (idx * _(d)->elementSize);
   memcpy(dest, src, num * _(s)->elementSize);
 }
@@ -399,7 +399,7 @@ static struct _StentCatch *_StentCatchAtDepth(size_t depth)
   return sc;
 }
 
-void sthrow(int type, char *message)
+void sthrow(int type, const char *message)
 {
   struct _StentCatch *sc = NULL;
   size_t ml = 0;
