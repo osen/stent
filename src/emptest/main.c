@@ -77,16 +77,18 @@ ref(FILE) fopen_s(const char *path, const char *mode)
 void simulate_throw_2(ref(void) e)
 {
   printf("Simulating throw 2\n");
-  sthrow(0, "A fail 2 occured");
+  sthrow(1, "A fail 2 occured");
 }
 
 void simulate_throw_1(ref(void) e)
 {
+  struct Exception ex = {0};
+
   printf("Simulating throw 1\n");
 
-  scatch(simulate_throw_2, e)
+  scatch(ex, simulate_throw_2, e)
   {
-    printf("Something threw 2\n");
+    printf("Exception: [%i] %s\n", ex.type, ex.message);
     sthrow(0, "A fail 1 occured");
   }
 }
@@ -109,12 +111,13 @@ int main()
 #ifdef EXCEPTION_TEST
 {
   ref(struct Employee) emp = NULL;
+  struct Exception ex = {0};
 
   emp = EmployeeCreate();
 
-  scatch(simulate_throw_1, emp)
+  scatch(ex, simulate_throw_1, emp)
   {
-    printf("Something threw 1\n");
+    printf("Exception: [%i] %s\n", ex.type, ex.message);
   }
 
   EmployeeDestroy(emp);

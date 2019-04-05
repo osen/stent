@@ -10,7 +10,7 @@
 #define STENT_ENABLE
 
 #define STENT_BLOCKSIZE 1024
-#define STENT_EXCEPTION_SIZE 1024
+#define STENT_EXCEPTION_MESSAGE_LENGTH 1024
 
 #ifdef STENT_ENABLE
 
@@ -200,13 +200,13 @@ void _vector_insert(vector(void) ptr, size_t before,
 struct Exception
 {
   int type;
-  char message[STENT_EXCEPTION_SIZE];
+  char message[STENT_EXCEPTION_MESSAGE_LENGTH];
 };
 
-#define scatch(F, P) \
-  if(_scatch(F, (ref(void))P)) \
+#define scatch(E, F, P) \
+  if(_scatch(&E, F, (ref(void))P)) \
 
 void sthrow(int rc, char *message);
-int _scatch(void (*func)(ref(void)), ref(void) ptr);
+int _scatch(struct Exception *ex, void (*func)(ref(void)), ref(void) ptr);
 
 #endif

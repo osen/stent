@@ -374,35 +374,9 @@ void _vector_insert(vector(void) ptr, size_t before,
  * Exceptions
  ***************************************************/
 
-void sthrow(int rc, char *message)
+static struct _StentCatch *_StentCatchAtDepth(size_t depth)
 {
   struct _StentCatch *sc = NULL;
-  size_t d = 0;
-
-  d = _scatchDepth - 1;
-  sc = _scatchs;
-
-  while(d)
-  {
-    if(!sc->next)
-    {
-      sc->next = (struct _StentCatch *)calloc(1, sizeof(*_scatchs));
-    }
-
-    sc = sc->next;
-    d--;
-  }
-
-  longjmp(sc->buf, 1);
-}
-
-int _scatch(void (*func)(ref(void)), ref(void) ptr)
-{
-  struct _StentCatch *sc = NULL;
-  size_t d = 0;
-
-  _scatchDepth ++;
-  d = _scatchDepth - 1;
 
   if(!_scatchs)
   {
@@ -411,7 +385,7 @@ int _scatch(void (*func)(ref(void)), ref(void) ptr)
 
   sc = _scatchs;
 
-  while(d)
+  while(depth)
   {
     if(!sc->next)
     {
@@ -419,11 +393,50 @@ int _scatch(void (*func)(ref(void)), ref(void) ptr)
     }
 
     sc = sc->next;
-    d--;
+    depth--;
   }
+
+  return sc;
+}
+
+void sthrow(int type, char *message)
+{
+  struct _StentCatch *sc = NULL;
+  size_t ml = 0;
+
+  if(!_scatchDepth)
+  {
+    fprintf(stderr, "Error: Unhandled exception\n");
+    abort();
+  }
+
+  sc = _StentCatchAtDepth(_scatchDepth - 1);
+  sc->ex.type = type;
+
+  ml = strlen(message);
+
+  if(ml >= STENT_EXCEPTION_MESSAGE_LENGTH)
+  {
+    ml = STENT_EXCEPTION_MESSAGE_LENGTH - 1;
+  }
+
+  strncpy(sc->ex.message, message, ml);
+  sc->ex.message[ml] = '\0';
+
+  longjmp(sc->buf, 1);
+}
+
+int _scatch(struct Exception *ex, void (*func)(ref(void)), ref(void) ptr)
+{
+  struct _StentCatch *sc = NULL;
+
+  _scatchDepth ++;
+  sc = _StentCatchAtDepth(_scatchDepth - 1);
 
   if(setjmp(sc->buf))
   {
+    sc = _StentCatchAtDepth(_scatchDepth - 1);
+    *ex = sc->ex;
     _scatchDepth--;
 
     return 1;
