@@ -101,6 +101,16 @@ int _svalid(ref(void) ptr, const char *file, size_t line);
   } \
   while(0)
 
+#define vector_resize(V, S) \
+  do \
+  { \
+    memcmp(&V, &V, 0); \
+    memcmp(V[0], V[0], 0); \
+    memcmp(V[0][0], V[0][0], 0); \
+    _vector_resize((vector(void))V, S); \
+  } \
+  while(0)
+
 #define vector_at(V, I) \
   (_(V)[0][_vector_valid((vector(void))V, (1 || memcmp(&V, &V, 0) ? I : 0))])
 
@@ -169,6 +179,13 @@ void _vector_insert(vector(void) ptr, size_t before,
   { \
     _vector_resize((vector(void))V, vector_size(V) + 1); \
     _(V)[0][vector_size(V) - 1] = E; \
+  } \
+  while(0)
+
+#define vector_resize(V, S) \
+  do \
+  { \
+    _vector_resize((vector(void))V, S); \
   } \
   while(0)
 

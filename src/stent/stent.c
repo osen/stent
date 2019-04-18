@@ -26,16 +26,6 @@ struct _StentBlock
 
 static struct _StentBlock *_sblocks;
 
-struct _StentCatch
-{
-  jmp_buf buf;
-  struct Exception ex;
-  struct _StentCatch *next;
-};
-
-static struct _StentCatch *_scatchs;
-static size_t _scatchDepth;
-
 static void _satexit()
 {
   struct _StentBlock *sb = NULL;
@@ -374,6 +364,16 @@ void _vector_insert(vector(void) ptr, size_t before,
  * Exceptions
  ***************************************************/
 
+struct _StentCatch
+{
+  jmp_buf buf;
+  struct Exception ex;
+  struct _StentCatch *next;
+};
+
+static struct _StentCatch *_scatchs;
+static size_t _scatchDepth;
+
 static struct _StentCatch *_StentCatchAtDepth(size_t depth)
 {
   struct _StentCatch *sc = NULL;
@@ -406,7 +406,7 @@ void sthrow(int type, const char *message)
 
   if(!_scatchDepth)
   {
-    fprintf(stderr, "Error: Unhandled exception\n");
+    fprintf(stderr, "Error: Unhandled exception [%i] %s\n", type, message);
     abort();
   }
 
