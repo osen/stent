@@ -24,23 +24,23 @@ project should also explain these concepts.
 
 2) Declare a variable to store the pointer:
 
-struct SomeStruct *someStruct = NULL;     // Standard C
-ref(SomeStruct) someStruct = NULL;        // Using Stent
+    struct SomeStruct *someStruct = NULL;  // Standard C
+    ref(SomeStruct) someStruct = NULL;     // Using Stent
 
 3) To dereference a pointer:
 
-someStruct->someData = 6;        // Standard C
-_(someStruct)->someData = 6;     // Using Stent
+    someStruct->someData = 6;    // Standard C
+    _(someStruct).someData = 6;  // Using Stent
 
 4) To allocate dynamic memory:
 
-someStruct = calloc(1, sizeof(*someStruct));     // Standard C
-someStruct = allocate(SomeStruct);               // Using Stent
+    someStruct = calloc(1, sizeof(*someStruct));  // Standard C
+    someStruct = allocate(SomeStruct);            // Using Stent
 
 5) To free dynamic memory:
 
-free(someStruct);     // Standard C
-release(someStruct);  // Using Stent
+    free(someStruct);     // Standard C
+    release(someStruct);  // Using Stent
 
 Note that when using Stent, any time you subsequently dereference
 the pointer using _(...), it will return NULL since the memory pointed
@@ -49,24 +49,24 @@ will reliably crash.
 
 6) Forward declaring a structure:
 
-struct SomeStruct;     // Same for both Standard C and Stent
+    struct SomeStruct;  // Same for both Standard C and Stent
 
 7) Defining a structure containing a pointer:
 
-struct Test
-{
-  struct SomeStruct *someStruct;     // Standard C
-  ref(SomeStruct) someStruct;        // Using Stent
-};
+    struct Test
+    {
+      struct SomeStruct *someStruct;  // Standard C
+      ref(SomeStruct) someStruct;     // Using Stent
+    };
 
 8) Pass pointer into function (Function prototypes):
 
-void SomeStructDoSomething(struct SomeStruct *someStruct);     // Standard C
-void SomeStructDoDomething(ref(SomeStruct) someStruct);        // Using Stent
+    void SomeStructDoSomething(struct SomeStruct *someStruct);  // Standard C
+    void SomeStructDoDomething(ref(SomeStruct) someStruct);     // Using Stent
 
 9) Pass pointer into function (Calling function):
 
-SomeStructDoSomething(someStruct);     // Same for both Standard C and Stent
+    SomeStructDoSomething(someStruct);  // Same for both Standard C and Stent
 
 Leak Detector
 -------------
@@ -75,11 +75,12 @@ There is also basic support for leak detection. Have a look at the
 
 For a simple example, if a leak exists, a message will appear such as:
 
-***** Memory Leak ******
-Type: struct Test
-File: example/leak/main.c
-Line: 14
+    ***** Memory Leak ******
+    Type: struct Test
+    File: example/leak/main.c
+    Line: 14
 
 This is possible because Stent creates an "atexit" hook that upon
 program termination, will scan internal memory for a list of data
 yet to be freed.
+
