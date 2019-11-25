@@ -11,7 +11,9 @@ too much.
 
 Rather than using a raw pointer, the developer uses a pointer wrapper
 which is guaranteed to return NULL as soon as the original data
-being pointed to is freed.
+being pointed to is freed. Rather than return NULL, Stent instead
+displays a useful debug error and aborts the program, letting the
+developer know that there is an issue with the code.
 
 Getting Started
 ---------------
@@ -21,6 +23,13 @@ of the steps required. However, a quick look through the "example/game"
 project should also explain these concepts.
 
 Include the "stent.h" header file.
+
+    #define STENT_IMPLEMENTATION
+    #include <stent.h>
+
+**Note:** Exactly one compilation unit must define *STENT_IMPLEMENTATION*
+before including the header in order for the implementation of Stent
+to be compiled correctly as a header-only library.
 
 Declare a variable to store the pointer:
 
@@ -42,10 +51,10 @@ To free dynamic memory:
     free(someStruct);     // Standard C
     release(someStruct);  // Using Stent
 
-Note that when using Stent, any time you subsequently dereference
-the pointer using _(...), it will return NULL since the memory pointed
+**Note:** When using Stent, any time you subsequently dereference
+the pointer using `_(ptr)`, it will abort since the memory pointed
 to is no longer valid. This means that without checking, the program
-will reliably crash.
+will reliably crash in the debug build.
 
 Forward declaring a structure:
 
