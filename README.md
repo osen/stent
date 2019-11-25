@@ -80,11 +80,11 @@ Pass pointer into function (Calling function):
 Leak Detector
 -------------
 There is also basic support for leak detection. Have a look at the
-"example/leak" project for more information.
+"src/tests/leak.c" project for more information.
 
 For a simple example, if a leak exists, a message will appear such as:
 
-    ***** Memory Leak ******
+    ***** Memory Leak *****
     Type: struct Test
     File: example/leak/main.c
     Line: 14

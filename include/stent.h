@@ -688,7 +688,7 @@ size_t _vector_valid(vector(void) ptr, size_t idx)
     return idx;
   }
 
-  fprintf(stderr, "Error: Index out of bounds\n");
+  fprintf(stderr, "Error: Index [index=%lu] out of bounds [size=%lu]\n", idx, _(v).size);
   abort();
 }
 

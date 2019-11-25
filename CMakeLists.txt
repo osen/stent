@@ -38,4 +38,5 @@ create_test(invalid_void_cast false)
 create_test(use_null false)
 create_test(release_null false)
 create_test(leak false)
+create_test(vector_oob false)
 
