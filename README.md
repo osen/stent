@@ -6,14 +6,18 @@ How It Works
 ------------
 By borrowing concepts from std::weak_ptr in C++ (or more closely
 wxWeakRef from wxWidgets), Memory errors in C can appear in a more
-deterministic manner without impacting the design of program code
-too much.
+deterministic manner without severely impacting the design of program
+code.
 
 Rather than using a raw pointer, the developer uses a pointer wrapper
 which is guaranteed to return NULL as soon as the original data
 being pointed to is freed. Rather than return NULL, Stent instead
 displays a useful debug error and aborts the program, letting the
 developer know that there is an issue with the code.
+
+**Note:** Stent is intended to be enabled only during debugging.
+For release builds, it can be disabled and the program will incur
+no additional costs to the performance at runtime.
 
 Getting Started
 ---------------
