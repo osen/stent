@@ -19,8 +19,8 @@ Getting Started
 ---------------
 There are a few considerations that a developer needs to make before
 using Stent. The following instructions should provide a brief overview
-of the steps required. However, a quick look through the "example/game"
-project should also explain these concepts.
+of the steps required. However, a quick look through the *src/tests/ref.c*
+program should also explain these concepts.
 
 Include the "stent.h" header file.
 
@@ -80,7 +80,7 @@ Pass pointer into function (Calling function):
 Leak Detector
 -------------
 There is also basic support for leak detection. Have a look at the
-"src/tests/leak.c" project for more information.
+*src/tests/leak.c* program for more information.
 
 For a simple example, if a leak exists, a message will appear such as:
 

@@ -39,4 +39,8 @@ create_test(use_null false)
 create_test(release_null false)
 create_test(leak false)
 create_test(vector_oob false)
+create_test(vector_use_null false)
+create_test(vector_dangling_ref false)
+# vector_leak
+# vector_incorrect_delete
 

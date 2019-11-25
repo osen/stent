@@ -139,10 +139,8 @@ int _svalid(refvoid ptr, const char *file, size_t line);
 #define vector_delete(V) \
   do \
   { \
-    memcmp(&V, &V, 0); \
-    memcmp(V[0], V[0], 0); \
-    memcmp(V[0][0], V[0][0], 0); \
     &_(V); \
+    memcmp(&V[0][0][0], &V[0][0][0], 0); \
     _vector_delete((vector(void))V, __FILE__, __LINE__); \
   } \
   while(0)
@@ -157,9 +155,8 @@ int _svalid(refvoid ptr, const char *file, size_t line);
 #define vector_erase(V, I, N) \
   do \
   { \
-    memcmp(&V, &V, 0); \
-    memcmp(V[0], V[0], 0); \
-    memcmp(V[0][0], V[0][0], 0); \
+    &_(V); \
+    memcmp(&V[0][0][0], &V[0][0][0], 0); \
     _vector_erase((vector(void))V, I, N); \
   } \
   while(0)
@@ -167,9 +164,8 @@ int _svalid(refvoid ptr, const char *file, size_t line);
 #define vector_push_back(V, E) \
   do \
   { \
-    memcmp(&V, &V, 0); \
-    memcmp(V[0], V[0], 0); \
-    memcmp(V[0][0], V[0][0], 0); \
+    &_(V); \
+    memcmp(&V[0][0][0], &V[0][0][0], 0); \
     _vector_resize((vector(void))V, vector_size(V) + 1); \
     __(V)[0][vector_size(V) - 1] = E; \
   } \
@@ -178,9 +174,8 @@ int _svalid(refvoid ptr, const char *file, size_t line);
 #define vector_resize(V, S) \
   do \
   { \
-    memcmp(&V, &V, 0); \
-    memcmp(V[0], V[0], 0); \
-    memcmp(V[0][0], V[0][0], 0); \
+    &_(V); \
+    memcmp(&V[0][0][0], &V[0][0][0], 0); \
     _vector_resize((vector(void))V, S); \
   } \
   while(0)
@@ -557,6 +552,8 @@ int _svalid(refvoid ptr, const char *file, size_t line)
   {
     fprintf(stderr, "Error: NULL pointer in %s %i\n",
       file, (int)line);
+
+    abort();
   }
 
   allocation = (struct Allocation *)ptr;
@@ -633,7 +630,7 @@ size_t _vector_size(vector(void) ptr)
 
   v = (ref(_StentVector))ptr;
 
-  return __(v)->size;
+  return _(v).size;
 }
 
 void _vector_resize(vector(void) ptr, size_t size)
