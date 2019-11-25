@@ -20,24 +20,24 @@ using Stent. The following instructions should provide a brief overview
 of the steps required. However, a quick look through the "example/game"
 project should also explain these concepts.
 
-1) Include the "stent.h" header file.
+Include the "stent.h" header file.
 
-2) Declare a variable to store the pointer:
+Declare a variable to store the pointer:
 
     struct SomeStruct *someStruct = NULL;  // Standard C
     ref(SomeStruct) someStruct = NULL;     // Using Stent
 
-3) To dereference a pointer:
+To dereference a pointer:
 
     someStruct->someData = 6;    // Standard C
     _(someStruct).someData = 6;  // Using Stent
 
-4) To allocate dynamic memory:
+To allocate dynamic memory:
 
     someStruct = calloc(1, sizeof(*someStruct));  // Standard C
     someStruct = allocate(SomeStruct);            // Using Stent
 
-5) To free dynamic memory:
+To free dynamic memory:
 
     free(someStruct);     // Standard C
     release(someStruct);  // Using Stent
@@ -47,11 +47,11 @@ the pointer using _(...), it will return NULL since the memory pointed
 to is no longer valid. This means that without checking, the program
 will reliably crash.
 
-6) Forward declaring a structure:
+Forward declaring a structure:
 
     struct SomeStruct;  // Same for both Standard C and Stent
 
-7) Defining a structure containing a pointer:
+Defining a structure containing a pointer:
 
     struct Test
     {
@@ -59,12 +59,12 @@ will reliably crash.
       ref(SomeStruct) someStruct;     // Using Stent
     };
 
-8) Pass pointer into function (Function prototypes):
+Pass pointer into function (Function prototypes):
 
     void SomeStructDoSomething(struct SomeStruct *someStruct);  // Standard C
     void SomeStructDoDomething(ref(SomeStruct) someStruct);     // Using Stent
 
-9) Pass pointer into function (Calling function):
+Pass pointer into function (Calling function):
 
     SomeStructDoSomething(someStruct);  // Same for both Standard C and Stent
 
