@@ -94,7 +94,7 @@
 #define release(R) \
   do \
   { \
-    &_(R); \
+    if(&_(R)) { } \
     _stent_free((refvoid)R, __FILE__, __LINE__); \
   } \
   while(0)
@@ -139,7 +139,7 @@ int _svalid(refvoid ptr, const char *file, size_t line);
 #define vector_delete(V) \
   do \
   { \
-    &_(V); \
+    if(&_(V)) { } \
     memcmp(&V[0][0][0], &V[0][0][0], 0); \
     _vector_delete((vector(void))V, __FILE__, __LINE__); \
   } \
@@ -155,7 +155,7 @@ int _svalid(refvoid ptr, const char *file, size_t line);
 #define vector_erase(V, I, N) \
   do \
   { \
-    &_(V); \
+    if(&_(V)) { } \
     memcmp(&V[0][0][0], &V[0][0][0], 0); \
     _vector_erase((vector(void))V, I, N); \
   } \
@@ -164,7 +164,7 @@ int _svalid(refvoid ptr, const char *file, size_t line);
 #define vector_push_back(V, E) \
   do \
   { \
-    &_(V); \
+    if(&_(V)) { } \
     memcmp(&V[0][0][0], &V[0][0][0], 0); \
     _vector_resize((vector(void))V, vector_size(V) + 1); \
     __(V)[0][vector_size(V) - 1] = E; \
@@ -174,7 +174,7 @@ int _svalid(refvoid ptr, const char *file, size_t line);
 #define vector_resize(V, S) \
   do \
   { \
-    &_(V); \
+    if(&_(V)) { } \
     memcmp(&V[0][0][0], &V[0][0][0], 0); \
     _vector_resize((vector(void))V, S); \
   } \
@@ -685,7 +685,8 @@ size_t _vector_valid(vector(void) ptr, size_t idx)
     return idx;
   }
 
-  fprintf(stderr, "Error: Index [index=%lu] out of bounds [size=%lu]\n", idx, _(v).size);
+  fprintf(stderr, "Error: Index [index=%lu] out of bounds [size=%lu]\n",
+    (unsigned long)idx, (unsigned long)_(v).size);
   abort();
 }
 
