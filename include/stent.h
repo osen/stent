@@ -277,7 +277,7 @@ void _vector_insert(vector(void) ptr, size_t before,
   } \
   while(0)
 
-#define vector_clear(V, S) \
+#define vector_clear(V) \
   _vector_clear((vector(void))V); \
 
 #define vector_at(V, I) \
