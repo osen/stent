@@ -180,6 +180,15 @@ int _svalid(refvoid ptr, const char *file, size_t line);
   } \
   while(0)
 
+#define vector_clear(V) \
+  do \
+  { \
+    if(&_(V)) { } \
+    memcmp(&V[0][0][0], &V[0][0][0], 0); \
+    _vector_clear((vector(void))V); \
+  } \
+  while(0)
+
 #define vector_at(V, I) \
   (__(V)[0][_vector_valid((vector(void))V, (1 || memcmp(&V, &V, 0) ? I : 0))])
 
@@ -204,6 +213,7 @@ vector(void) _vector_new(size_t size, const char *type);
 void _vector_delete(vector(void) ptr, const char *file, size_t line);
 size_t _vector_size(vector(void) ptr);
 void _vector_resize(vector(void) ptr, size_t size);
+void _vector_clear(vector(void) ptr);
 size_t _vector_valid(vector(void) ptr, size_t idx);
 void _vector_erase(vector(void) ptr, size_t idx, size_t num);
 
@@ -267,6 +277,9 @@ void _vector_insert(vector(void) ptr, size_t before,
   } \
   while(0)
 
+#define vector_clear(V, S) \
+  _vector_clear((vector(void))V); \
+
 #define vector_at(V, I) \
    (__(V)[0][_vector_valid((vector(void))V, I)])
 
@@ -300,12 +313,27 @@ struct sstream;
 ref(sstream) sstream_new();
 void sstream_delete(ref(sstream) ctx);
 
-void sstream_push_char(ref(sstream) ctx, unsigned char c);
+void sstream_str_cstr(ref(sstream) ctx, char *str);
+void sstream_append_char(ref(sstream) ctx, unsigned char c);
+void sstream_append_cstr(ref(sstream) ctx, char *str);
+
 void sstream_split(ref(sstream) ctx, unsigned char c, vector(ref(sstream)) out);
 char *sstream_cstr(ref(sstream) ctx);
 unsigned char sstream_at(ref(sstream) ctx, size_t idx);
 size_t sstream_length(ref(sstream) ctx);
 void sstream_erase(ref(sstream) ctx, size_t idx, size_t num);
+void sstream_clear(ref(sstream) ctx);
+
+/***************************************************
+ * File Stream
+ ***************************************************/
+
+struct ifstream;
+
+ref(ifstream) ifstream_open_cstr(char *path);
+void ifstream_close(ref(ifstream) ctx);
+int ifstream_eof(ref(ifstream) ctx);
+void ifstream_getline(ref(ifstream) ctx, ref(sstream) out);
 
 #endif
 
@@ -633,6 +661,15 @@ size_t _vector_size(vector(void) ptr)
   return _(v).size;
 }
 
+void _vector_clear(vector(void) ptr)
+{
+  ref(_StentVector) v = NULL;
+
+  v = (ref(_StentVector))ptr;
+
+  __(v)->size = 0;
+}
+
 void _vector_resize(vector(void) ptr, size_t size)
 {
   ref(_StentVector) v = NULL;
@@ -805,10 +842,23 @@ void sstream_delete(ref(sstream) ctx)
   release(ctx);
 }
 
-void sstream_push_char(ref(sstream) ctx, unsigned char c)
+void sstream_append_char(ref(sstream) ctx, unsigned char c)
 {
   vector_at(_(ctx).data, vector_size(_(ctx).data) - 1) = c;
   vector_push_back(_(ctx).data, '\0');
+}
+
+void sstream_append_cstr(ref(sstream) ctx, char *str)
+{
+  size_t len = 0;
+  size_t ci = 0;
+
+  len = strlen(str);
+
+  for(ci = 0; ci < len; ci++)
+  {
+    sstream_append_char(ctx, str[ci]);
+  }
 }
 
 size_t sstream_length(ref(sstream) ctx)
@@ -843,7 +893,7 @@ void sstream_split(ref(sstream) ctx, unsigned char c, vector(ref(sstream)) out)
     }
     else
     {
-      sstream_push_char(curr, ch);
+      sstream_append_char(curr, ch);
     }
   }
 
@@ -868,6 +918,110 @@ void sstream_erase(ref(sstream) ctx, size_t idx, size_t num)
   }
 
   vector_erase(_(ctx).data, idx, num);
+}
+
+void sstream_str_cstr(ref(sstream) ctx, char *str)
+{
+  vector_clear(_(ctx).data);
+  vector_push_back(_(ctx).data, '\0');
+  sstream_append_cstr(ctx, str);
+}
+
+/***************************************************
+ * File Stream
+ ***************************************************/
+
+struct ifstream
+{
+  FILE *fp;
+};
+
+ref(ifstream) ifstream_open_cstr(char *path)
+{
+  ref(ifstream) rtn = NULL;
+  FILE *fp = NULL;
+
+  fp = fopen(path, "rb");
+
+  if(!fp)
+  {
+    return NULL;
+  }
+
+  rtn = allocate(ifstream);
+  _(rtn).fp = fp;
+
+  return rtn;
+}
+
+void ifstream_close(ref(ifstream) ctx)
+{
+  fclose(_(ctx).fp);
+  release(ctx);
+}
+
+int ifstream_eof(ref(ifstream) ctx)
+{
+  char c = 0;
+
+  if(feof(_(ctx).fp))
+  {
+    return 1;
+  }
+
+  c = getc(_(ctx).fp);
+
+  if(c == EOF)
+  {
+    return 1;
+  }
+
+  ungetc(c, _(ctx).fp);
+
+  return 0;
+}
+
+void ifstream_getline(ref(ifstream) ctx, ref(sstream) out)
+{
+  char buf[1024] = {0};
+  size_t ci = 0;
+  char rc = 0;
+
+  sstream_str_cstr(out, "");
+
+  while(1)
+  {
+    if(!fgets(buf, sizeof(buf), _(ctx).fp))
+    {
+      if(sstream_length(out) > 0)
+      {
+        return;
+      }
+
+      fprintf(stderr, "Error: Failed to read from input stream\n");
+      abort();
+    }
+
+    ci = 0;
+
+    while(1)
+    {
+      rc = buf[ci];
+
+      if(rc == '\0')
+      {
+        break;
+      }
+
+      if(rc == '\n')
+      {
+        return;
+      }
+
+      sstream_append_char(out, rc);
+      ci++;
+    }
+  }
 }
 
 #endif

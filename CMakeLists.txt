@@ -30,6 +30,7 @@ create_test(copy true)
 create_test(zero_initialized true)
 create_test(void_cast true)
 create_test(vector true)
+create_test(fstream true)
 
 create_test(dangling_ref false)
 create_test(dangling_ref_copy false)
@@ -43,4 +44,3 @@ create_test(vector_use_null false)
 create_test(vector_dangling_ref false)
 # vector_leak
 # vector_incorrect_delete
-
