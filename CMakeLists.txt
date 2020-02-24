@@ -15,7 +15,6 @@ function(create_test NAME RETURN_ZERO)
   else()
     add_test(${NAME} harness ./${NAME})
   endif()
-
 endfunction()
 
 add_executable(harness
