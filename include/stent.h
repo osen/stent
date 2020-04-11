@@ -6,10 +6,11 @@
  * - _svalid doesn't really need to return an int?
  * - _svalid should ensure passed in pointer is within allocated blocks
  * - Can temporaries be supported?
- * - Remove usage of __(P)
  *****************************************************************************/
 #ifndef STENT_STENT_H
 #define STENT_STENT_H
+
+#include <dirent.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -59,18 +60,15 @@
  * value is the first element of the passed in parameter to ensure type safety
  * and avoiding the need to manually cast.
  *****************************************************************************/
-#define __(R) \
-  (_svalid((refvoid)R, __FILE__, __LINE__) || \
-    memcmp(&R, &R, 0) || \
-    memcmp(&R[0], &R[0], 0) || \
-    memcmp(&R[0][0], &R[0][0], 0) ? \
-    R[0] : NULL)
-
 #define _(R) \
-  R[(_svalid((refvoid)R, __FILE__, __LINE__) || \
+  ((_assert_ref(R))[0][0])
+
+#define _assert_ref(R) \
+  ((_svalid((refvoid)R, __FILE__, __LINE__) || \
     memcmp(&R, &R, 0) || \
     memcmp(&R[0], &R[0], 0) || \
-    memcpy(&R[0][0], &R[0][0], 0) ? 0 : 0)][0]
+    memcpy(&R[0][0], &R[0][0], 0) || \
+    1) ? R : NULL)
 
 /*****************************************************************************
  * allocate(T)
@@ -92,12 +90,7 @@
  * line number for debug purposes.
  *****************************************************************************/
 #define release(R) \
-  do \
-  { \
-    if(&_(R)) { } \
-    _stent_free((refvoid)R, __FILE__, __LINE__); \
-  } \
-  while(0)
+  _stent_free((refvoid)_assert_ref(R), __FILE__, __LINE__);
 
 /*****************************************************************************
  * cast
@@ -110,13 +103,18 @@
 #define cast(T, R) \
   (ref(T))_stent_cast(#T, (refvoid)R, __FILE__, __LINE__)
 
+/*
+  TODO: Need to ensure R is a ref(type).
+  (ref(T))_stent_cast(#T, (refvoid)_assert_ref(R), __FILE__, __LINE__)
+*/
+
 /*****************************************************************************
  * void_cast
  *
  * TODO
  *****************************************************************************/
 #define void_cast(R) \
-  _stent_cast("void", (refvoid)R, __FILE__, __LINE__)
+  _stent_cast("void", (refvoid)_assert_ref(R), __FILE__, __LINE__)
 
 refvoid _stent_alloc(size_t size, const char *type);
 void _stent_free(refvoid ptr, const char *file, size_t line);
@@ -133,81 +131,53 @@ int _svalid(refvoid ptr, const char *file, size_t line);
 #define vector(T) \
   T ***
 
+#define _assert_vector(V) \
+  ((_svalid((refvoid)V, __FILE__, __LINE__) || \
+    memcmp(&V, &V, 0) || \
+    memcmp(&V[0], &V[0], 0) || \
+    memcpy(&V[0][0], &V[0][0], 0) || \
+    memcpy(&V[0][0][0], &V[0][0][0], 0) || \
+    1) ? V : NULL)
+
 #define vector_new(T) \
   (vector(T))_vector_new(sizeof(T), "vector("#T")")
 
 #define vector_delete(V) \
-  do \
-  { \
-    if(&_(V)) { } \
-    memcmp(&V[0][0][0], &V[0][0][0], 0); \
-    _vector_delete((vector(void))V, __FILE__, __LINE__); \
-  } \
-  while(0)
+  _vector_delete((vector(void))_assert_vector(V), __FILE__, __LINE__)
 
 #define vector_size(V) \
-  ((1 || \
-    memcmp(&V, &V, 0) || \
-    memcmp(V[0], V[0], 0) || \
-    memcmp(V[0][0], V[0][0], 0)) ? \
-    _vector_size((vector(void))V) : 0)
+  _vector_size((vector(void))_assert_vector(V))
 
 #define vector_erase(V, I, N) \
-  do \
-  { \
-    if(&_(V)) { } \
-    memcmp(&V[0][0][0], &V[0][0][0], 0); \
-    _vector_erase((vector(void))V, I, N); \
-  } \
-  while(0)
+  _vector_erase((vector(void))_assert_vector(V), I, N)
 
 #define vector_push_back(V, E) \
   do \
   { \
-    if(&_(V)) { } \
-    memcmp(&V[0][0][0], &V[0][0][0], 0); \
-    _vector_resize((vector(void))V, vector_size(V) + 1); \
-    __(V)[0][vector_size(V) - 1] = E; \
+    _vector_resize((vector(void))_assert_vector(V), vector_size(V) + 1); \
+    _(V)[vector_size(V) - 1] = E; \
   } \
   while(0)
 
 #define vector_resize(V, S) \
   do \
   { \
-    if(&_(V)) { } \
-    memcmp(&V[0][0][0], &V[0][0][0], 0); \
-    _vector_resize((vector(void))V, S); \
+    _vector_resize((vector(void))_assert_vector(V), S); \
   } \
   while(0)
 
 #define vector_clear(V) \
   do \
   { \
-    if(&_(V)) { } \
-    memcmp(&V[0][0][0], &V[0][0][0], 0); \
-    _vector_clear((vector(void))V); \
+    _vector_clear((vector(void))_assert_vector(V)); \
   } \
   while(0)
 
 #define vector_at(V, I) \
-  (__(V)[0][_vector_valid((vector(void))V, (1 || memcmp(&V, &V, 0) ? I : 0))])
-
-#define vector_raw(V) \
-  &(vector_at(V, 0))
+  (_(V)[_vector_valid((vector(void))_assert_vector(V), I)])
 
 #define vector_insert(V, B, S, I, N) \
-  do \
-  { \
-    memcmp(&V, &V, 0); \
-    memcmp(V[0], V[0], 0); \
-    memcmp(V[0][0], V[0][0], 0); \
-    memcmp(&S, &S, 0); \
-    memcmp(S[0], S[0], 0); \
-    memcmp(S[0][0], S[0][0], 0); \
-    if(V == S){} \
-    _vector_insert((vector(void))V, B, (vector(void))S, I, N); \
-  } \
-  while(0)
+  _vector_insert((vector(void))_assert_vector(V), B, (vector(void))_assert_vector(S), I, N)
 
 vector(void) _vector_new(size_t size, const char *type);
 void _vector_delete(vector(void) ptr, const char *file, size_t line);
@@ -244,9 +214,6 @@ void _vector_insert(vector(void) ptr, size_t before,
 #define void_cast(R) \
   (refvoid)R
 
-#define __(R) \
-  R
-
 #define _(R) \
   R[0]
 
@@ -266,28 +233,21 @@ void _vector_insert(vector(void) ptr, size_t before,
   do \
   { \
     _vector_resize((vector(void))V, vector_size(V) + 1); \
-    __(V)[0][vector_size(V) - 1] = E; \
+    _(V)[vector_size(V) - 1] = E; \
   } \
   while(0)
 
 #define vector_resize(V, S) \
-  do \
-  { \
-    _vector_resize((vector(void))V, S); \
-  } \
-  while(0)
+  _vector_resize((vector(void))V, S)
 
 #define vector_clear(V) \
-  _vector_clear((vector(void))V); \
+  _vector_clear((vector(void))V)
 
 #define vector_at(V, I) \
-   (__(V)[0][_vector_valid((vector(void))V, I)])
-
-#define vector_raw(V) \
-  &(vector_at(V, 0))
+   (_(V)[_vector_valid((vector(void))V, I)])
 
 #define vector_erase(V, I, N) \
-  _vector_erase((vector(void))V, I, N);
+  _vector_erase((vector(void))V, I, N)
 
 #define vector_insert(V, B, S, I, N) \
   _vector_insert((vector(void))V, B, (vector(void))S, I, N)
@@ -322,6 +282,7 @@ void sstream_append_cstr(ref(sstream) ctx, char *str);
 void sstream_append_int(ref(sstream) ctx, int val);
 
 void sstream_split(ref(sstream) ctx, unsigned char c, vector(ref(sstream)) out);
+void sstream_split_eol(ref(sstream) ctx, vector(ref(sstream)) out);
 char *sstream_cstr(ref(sstream) ctx);
 unsigned char sstream_at(ref(sstream) ctx, size_t idx);
 size_t sstream_length(ref(sstream) ctx);
@@ -335,9 +296,26 @@ void sstream_clear(ref(sstream) ctx);
 struct ifstream;
 
 ref(ifstream) ifstream_open_cstr(char *path);
+ref(ifstream) ifstream_open(ref(sstream) path);
 void ifstream_close(ref(ifstream) ctx);
 int ifstream_eof(ref(ifstream) ctx);
 void ifstream_getline(ref(ifstream) ctx, ref(sstream) out);
+
+/***************************************************
+ * Directory Handling
+ ***************************************************/
+
+struct dir;
+
+ref(dir) dir_open_cstr(char *path);
+ref(dir) dir_open(ref(sstream) path);
+void dir_close(ref(dir) ctx);
+
+/***************************************************
+ * Error Handling
+ ***************************************************/
+
+void panic(char *message);
 
 #endif
 
@@ -634,7 +612,7 @@ vector(void) _vector_new(size_t size)
   rtn = allocate(_StentVector);
 #endif
 
-  __(rtn)->elementSize = size;
+  _(rtn).elementSize = size;
 
   return (vector(void))rtn;
 }
@@ -648,7 +626,7 @@ void _vector_delete(vector(void) ptr)
   ref(_StentVector) v = NULL;
 
   v = (ref(_StentVector))ptr;
-  free(__(v)->data);
+  free(_(v).data);
 
 #ifdef STENT_ENABLE
   _stent_free((refvoid)ptr, file, line);
@@ -672,7 +650,7 @@ void _vector_clear(vector(void) ptr)
 
   v = (ref(_StentVector))ptr;
 
-  __(v)->size = 0;
+  _(v).size = 0;
 }
 
 void _vector_resize(vector(void) ptr, size_t size)
@@ -683,9 +661,9 @@ void _vector_resize(vector(void) ptr, size_t size)
 
   v = (ref(_StentVector))ptr;
 
-  if(__(v)->allocated >= size)
+  if(_(v).allocated >= size)
   {
-    __(v)->size = size;
+    _(v).size = size;
     return;
   }
 
@@ -701,7 +679,7 @@ void _vector_resize(vector(void) ptr, size_t size)
     s = s * 2;
   }
 
-  d = calloc(s, __(v)->elementSize);
+  d = calloc(s, _(v).elementSize);
 
   if(!d)
   {
@@ -709,11 +687,11 @@ void _vector_resize(vector(void) ptr, size_t size)
     abort();
   }
 
-  memcpy(d, __(v)->data, __(v)->elementSize * __(v)->size);
-  free(__(v)->data);
-  __(v)->data = d;
-  __(v)->allocated = s;
-  __(v)->size = size;
+  memcpy(d, _(v).data, _(v).elementSize * _(v).size);
+  free(_(v).data);
+  _(v).data = d;
+  _(v).allocated = s;
+  _(v).size = size;
 }
 
 size_t _vector_valid(vector(void) ptr, size_t idx)
@@ -722,7 +700,7 @@ size_t _vector_valid(vector(void) ptr, size_t idx)
 
   v = (ref(_StentVector))ptr;
 
-  if(__(v)->size > idx)
+  if(_(v).size > idx)
   {
     return idx;
   }
@@ -741,8 +719,8 @@ void _vector_erase(vector(void) ptr, size_t idx, size_t num)
 
   v = (ref(_StentVector))ptr;
 
-  if(idx >= __(v)->size ||
-    idx + num > __(v)->size)
+  if(idx >= _(v).size ||
+    idx + num > _(v).size)
   {
     fprintf(stderr, "Error: Index out of bounds [size=%i] [index=%i]\n", (int)_(v).size, (int)(idx + num));
     abort();
@@ -753,20 +731,20 @@ void _vector_erase(vector(void) ptr, size_t idx, size_t num)
     return;
   }
 
-  dest = (char *)__(v)->data;
-  dest += (idx * __(v)->elementSize);
+  dest = (char *)_(v).data;
+  dest += (idx * _(v).elementSize);
 
   src = dest;
-  src += (num * __(v)->elementSize);
+  src += (num * _(v).elementSize);
 
-  tm = (__(v)->size - (idx + num)) * __(v)->elementSize;
+  tm = (_(v).size - (idx + num)) * _(v).elementSize;
 
   if(tm)
   {
     memmove(dest, src, tm);
   }
 
-  __(v)->size -= num;
+  _(v).size -= num;
 }
 
 void _vector_insert(vector(void) ptr, size_t before,
@@ -792,33 +770,33 @@ void _vector_insert(vector(void) ptr, size_t before,
     return;
   }
 
-  if(before > __(d)->size)
+  if(before > _(d).size)
   {
     fprintf(stderr, "Error: Invalid index specified. Non contiguous\n");
     abort();
   }
 
-  if(idx >= __(s)->size ||
-    idx + num > __(s)->size)
+  if(idx >= _(s).size ||
+    idx + num > _(s).size)
   {
     fprintf(stderr, "Error: Index out of bounds on source\n");
     abort();
   }
 
-  tm = (__(d)->size - before) * __(d)->elementSize;
+  tm = (_(d).size - before) * _(d).elementSize;
 
-  _vector_resize(ptr, __(d)->size + num);
+  _vector_resize(ptr, _(d).size + num);
 
-  src = (char *)__(d)->data;
-  src += (before * __(d)->elementSize);
+  src = (char *)_(d).data;
+  src += (before * _(d).elementSize);
   dest = src;
-  dest += (num * __(d)->elementSize);
+  dest += (num * _(d).elementSize);
   memmove(dest, src, tm);
 
   dest = src;
-  src = (char *)__(s)->data;
-  src += (idx * __(d)->elementSize);
-  memcpy(dest, src, num * __(s)->elementSize);
+  src = (char *)_(s).data;
+  src += (idx * _(d).elementSize);
+  memcpy(dest, src, num * _(s).elementSize);
 }
 
 /***************************************************
@@ -929,9 +907,105 @@ void sstream_split(ref(sstream) ctx, unsigned char c, vector(ref(sstream)) out)
   }
 }
 
+void sstream_split_eol(ref(sstream) ctx, vector(ref(sstream)) out)
+{
+  size_t max = 0;
+  size_t i = 0;
+  ref(sstream) curr = NULL;
+  char ch = 0;
+
+  /*
+   * If out array already larger than 0, use that existing string
+   * after blanking it.
+   */
+  if(max >= vector_size(out))
+  {
+    curr = sstream_new();
+  }
+  else
+  {
+    curr = vector_at(out, max);
+    sstream_str_cstr(curr, "");
+  }
+
+  for(i = 0; i < sstream_length(ctx); i++)
+  {
+    ch = sstream_at(ctx, i);
+
+    if(ch == '\n')
+    {
+      /*
+       * Add to out array if not an empty token
+       */
+      if(sstream_length(curr) > 0)
+      {
+        /*
+         * String is already in array if max is still smaller than array
+         */
+        if(max >= vector_size(out))
+        {
+          vector_push_back(out, curr);
+        }
+        max++;
+
+        /*
+         * If out array already larger than max, use that existing string
+         * after blanking it.
+         */
+        if(max >= vector_size(out))
+        {
+          curr = sstream_new();
+        }
+        else
+        {
+          curr = vector_at(out, max);
+          sstream_str_cstr(curr, "");
+        }
+      }
+    }
+    else if(ch == '\r')
+    {
+      /* Ignore */
+    }
+    else
+    {
+      sstream_append_char(curr, ch);
+    }
+  }
+
+  /*
+   * If remaining curr is not blank. Add it to out array
+   * if not already reusing an element.
+   */
+  if(sstream_length(curr) > 0)
+  {
+    if(max >= vector_size(out))
+    {
+      vector_push_back(out, curr);
+    }
+    max++;
+  }
+  else
+  {
+    if(max >= vector_size(out))
+    {
+      sstream_delete(curr);
+    }
+  }
+
+  /*
+   * Erase the remaining elements. They are not needed.
+   */
+  while(vector_size(out) > max)
+  {
+    sstream_delete(vector_at(out, vector_size(out) - 1));
+    vector_erase(out, vector_size(out) - 1, 1);
+  }
+}
+
 char *sstream_cstr(ref(sstream) ctx)
 {
-  return (char *)vector_raw(_(ctx).data);
+  return (char *)&vector_at(_(ctx).data, 0);
 }
 
 void sstream_erase(ref(sstream) ctx, size_t idx, size_t num)
@@ -961,6 +1035,44 @@ void sstream_str(ref(sstream) ctx, ref(sstream) str)
 }
 
 /***************************************************
+ * Directory Handling
+ ***************************************************/
+
+struct dir
+{
+  DIR *dp;
+};
+
+ref(dir) dir_open_cstr(char *path)
+{
+  ref(dir) rtn = NULL;
+  DIR *dp = NULL;
+
+  dp = opendir(path);
+
+  if(!dp)
+  {
+    return NULL;
+  }
+
+  rtn = allocate(dir);
+  _(rtn).dp = dp;
+
+  return rtn;
+}
+
+ref(dir) dir_open(ref(sstream) path)
+{
+  return dir_open_cstr(sstream_cstr(path));
+}
+
+void dir_close(ref(dir) ctx)
+{
+  closedir(_(ctx).dp);
+  release(ctx);
+}
+
+/***************************************************
  * File Stream
  ***************************************************/
 
@@ -985,6 +1097,11 @@ ref(ifstream) ifstream_open_cstr(char *path)
   _(rtn).fp = fp;
 
   return rtn;
+}
+
+ref(ifstream) ifstream_open(ref(sstream) path)
+{
+  return ifstream_open_cstr(sstream_cstr(path));
 }
 
 void ifstream_close(ref(ifstream) ctx)
@@ -1055,6 +1172,13 @@ void ifstream_getline(ref(ifstream) ctx, ref(sstream) out)
       ci++;
     }
   }
+}
+
+void panic(char *message)
+{
+  printf("Panic: %s\n", message);
+
+  abort();
 }
 
 #endif
