@@ -35,7 +35,7 @@
  * similar to the ref(T) MACRO but avoids the struct requirement.
  *****************************************************************************/
 #define refvoid \
-  void **
+  char **
 
 /*****************************************************************************
  * ref(T)
@@ -101,12 +101,7 @@
  * the implementation did not cause an incorrect type error.
  *****************************************************************************/
 #define cast(T, R) \
-  (ref(T))_stent_cast(#T, (refvoid)R, __FILE__, __LINE__)
-
-/*
-  TODO: Need to ensure R is a ref(type).
   (ref(T))_stent_cast(#T, (refvoid)_assert_ref(R), __FILE__, __LINE__)
-*/
 
 /*****************************************************************************
  * void_cast
@@ -197,7 +192,7 @@ void _vector_insert(vector(void) ptr, size_t before,
  ***************************************************/
 
 #define refvoid \
-  void *
+  char *
 
 #define ref(T) \
   struct T *
