@@ -24,6 +24,7 @@ int main()
    * Error: Attempt to cast Employee into Manager.
    */
   mgr = cast(Manager, vemp);
+  _(mgr).id = 9;
 
   release(emp);
 

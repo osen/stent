@@ -66,7 +66,8 @@
 #define _assert_ref(R) \
   ((_svalid((refvoid)R, __FILE__, __LINE__) || \
     memcmp(&R, &R, 0) || \
-    memcmp(&R[0], &R[0], 0) || \
+    /* TODO: Not required */ \
+    /* memcmp(&R[0], &R[0], 0) || */ \
     memcpy(&R[0][0], &R[0][0], 0) || \
     1) ? R : NULL)
 
@@ -129,8 +130,9 @@ int _svalid(refvoid ptr, const char *file, size_t line);
 #define _assert_vector(V) \
   ((_svalid((refvoid)V, __FILE__, __LINE__) || \
     memcmp(&V, &V, 0) || \
-    memcmp(&V[0], &V[0], 0) || \
-    memcpy(&V[0][0], &V[0][0], 0) || \
+    /* TODO: Not required */ \
+    /* memcmp(&V[0], &V[0], 0) || */ \
+    /* memcpy(&V[0][0], &V[0][0], 0) || */ \
     memcpy(&V[0][0][0], &V[0][0][0], 0) || \
     1) ? V : NULL)
 
@@ -239,7 +241,7 @@ void _vector_insert(vector(void) ptr, size_t before,
   _vector_clear((vector(void))V)
 
 #define vector_at(V, I) \
-   (_(V)[_vector_valid((vector(void))V, I)])
+   (_(V)[I])
 
 #define vector_erase(V, I, N) \
   _vector_erase((vector(void))V, I, N)
@@ -261,6 +263,35 @@ void _vector_insert(vector(void) ptr, size_t before,
 #endif
 
 /***************************************************
+ * Both
+ ***************************************************/
+#define _var(TAG) __##__LINE__##TAG__
+
+#define foreach(VAR, VEC, BODY) \
+  { \
+    size_t _var(i) = 0; \
+    for(; _var(i) < vector_size(VEC); ++_var(i)) \
+    { \
+      VAR = vector_at(VEC, _var(i)); \
+      BODY \
+    } \
+  }
+
+#define vector_fill(V, S, N, D) \
+  do \
+  { \
+    size_t __start = S; \
+    size_t __num = N; \
+    size_t vi = 0; \
+    vector_at(V, __start) = D; \
+    for(vi = __start; vi < __start + __num; ++vi) \
+    { \
+      vector_at(V, vi) = vector_at(V, __start); \
+    } \
+  } \
+  while(0)
+
+/***************************************************
  * String Stream
  ***************************************************/
 
@@ -269,12 +300,13 @@ struct sstream;
 ref(sstream) sstream_new();
 void sstream_delete(ref(sstream) ctx);
 
-void sstream_str_cstr(ref(sstream) ctx, char *str);
+void sstream_str_cstr(ref(sstream) ctx, const char *str);
 void sstream_str(ref(sstream) ctx, ref(sstream) str);
 void sstream_append(ref(sstream) ctx, ref(sstream) str);
 void sstream_append_char(ref(sstream) ctx, unsigned char c);
-void sstream_append_cstr(ref(sstream) ctx, char *str);
+void sstream_append_cstr(ref(sstream) ctx, const char *str);
 void sstream_append_int(ref(sstream) ctx, int val);
+void sstream_append_float(ref(sstream) ctx, float val);
 
 void sstream_split(ref(sstream) ctx, unsigned char c, vector(ref(sstream)) out);
 void sstream_split_eol(ref(sstream) ctx, vector(ref(sstream)) out);
@@ -282,7 +314,13 @@ char *sstream_cstr(ref(sstream) ctx);
 unsigned char sstream_at(ref(sstream) ctx, size_t idx);
 size_t sstream_length(ref(sstream) ctx);
 void sstream_erase(ref(sstream) ctx, size_t idx, size_t num);
-void sstream_clear(ref(sstream) ctx);
+
+void sstream_insert(ref(sstream) dest, size_t dbegin, ref(sstream) source, size_t sbegin, size_t count);
+
+vector(unsigned char) sstream_raw(ref(sstream) ctx);
+
+/* TODO: Use sstream_str_cstr */
+/* void sstream_clear(ref(sstream) ctx); */
 
 /***************************************************
  * File Stream
@@ -421,20 +459,22 @@ static void _stent_atexit(void)
  *****************************************************************************/
 static void _stent_init()
 {
+  if(blocks)
+  {
+    return;
+  }
+
+  blocks = (struct Block *)calloc(1, sizeof(*blocks));
+
   if(!blocks)
   {
-    blocks = (struct Block *)calloc(1, sizeof(*blocks));
+    fprintf(stderr, "Error: Failed to initialize initial block\n");
 
-    if(!blocks)
-    {
-      fprintf(stderr, "Error: Failed to initialize initial block\n");
-
-      abort();
-    }
-
-    fprintf(stderr, "Warning: Debug memory allocator enabled\n");
-    atexit(_stent_atexit);
+    abort();
   }
+
+  fprintf(stderr, "Warning: Debug memory allocator enabled\n");
+  atexit(_stent_atexit);
 }
 
 /*****************************************************************************
@@ -498,7 +538,6 @@ void _stent_free(refvoid ptr, const char *file, size_t line)
 {
   struct Allocation *allocation = NULL;
 
-  _stent_init();
   _svalid(ptr, file, line);
 
   allocation = (struct Allocation *)ptr;
@@ -519,7 +558,6 @@ refvoid _stent_cast(const char *type, refvoid ptr,
 {
   struct Allocation *allocation = NULL;
 
-  _stent_init();
   _svalid(ptr, file, line);
 
   allocation = (struct Allocation *)ptr;
@@ -550,9 +588,10 @@ refvoid _stent_cast(const char *type, refvoid ptr,
  *****************************************************************************/
 int _svalid(refvoid ptr, const char *file, size_t line)
 {
-  struct Allocation *allocation = NULL;
+  struct Allocation *allocation = (struct Allocation *)ptr;
 
-  _stent_init();
+  /* TODO: Can ptr be anything but NULL if stent is not initialized? */
+  /* _stent_init(); */
 
   if(!ptr)
   {
@@ -562,7 +601,10 @@ int _svalid(refvoid ptr, const char *file, size_t line)
     abort();
   }
 
-  allocation = (struct Allocation *)ptr;
+
+  /*
+   * TODO: Check to see if ptr is within a block.
+   */
 
   /*
    * TODO: Would allocation->ptr ever be NULL?
@@ -587,7 +629,7 @@ int _svalid(refvoid ptr, const char *file, size_t line)
 
 struct _StentVector
 {
-  void *data;
+  char *data;
   size_t size;
   size_t allocated;
   size_t elementSize;
@@ -658,6 +700,16 @@ void _vector_resize(vector(void) ptr, size_t size)
 
   if(_(v).allocated >= size)
   {
+#ifdef STENT_ENABLE
+    /*
+     * Fill reclaimed space with zero
+     */
+    if(_(v).size < size)
+    {
+      memset(_(v).data + _(v).size * _(v).elementSize, 0, (size - _(v).size) * _(v).elementSize);
+    }
+#endif
+
     _(v).size = size;
     return;
   }
@@ -803,6 +855,8 @@ struct sstream
   vector(unsigned char) data;
 };
 
+static char _scratch[256];
+
 ref(sstream) sstream_new()
 {
   ref(sstream) rtn = NULL;
@@ -847,7 +901,14 @@ void sstream_append_int(ref(sstream) ctx, int val)
   sstream_append_cstr(ctx, str);
 }
 
-void sstream_append_cstr(ref(sstream) ctx, char *str)
+void sstream_append_float(ref(sstream) ctx, float val)
+{
+  /* TODO: Better size query */
+  sprintf(_scratch, "%f", val);
+  sstream_append_cstr(ctx, _scratch);
+}
+
+void sstream_append_cstr(ref(sstream) ctx, const char *str)
 {
   size_t len = 0;
   size_t ci = 0;
@@ -1015,7 +1076,7 @@ void sstream_erase(ref(sstream) ctx, size_t idx, size_t num)
   vector_erase(_(ctx).data, idx, num);
 }
 
-void sstream_str_cstr(ref(sstream) ctx, char *str)
+void sstream_str_cstr(ref(sstream) ctx, const char *str)
 {
   vector_clear(_(ctx).data);
   vector_push_back(_(ctx).data, '\0');
@@ -1027,6 +1088,17 @@ void sstream_str(ref(sstream) ctx, ref(sstream) str)
   vector_clear(_(ctx).data);
   vector_push_back(_(ctx).data, '\0');
   sstream_append(ctx, str);
+}
+
+vector(unsigned char) sstream_raw(ref(sstream) ctx)
+{
+  return _(ctx).data;
+}
+
+void sstream_insert(ref(sstream) dest, size_t dbegin, ref(sstream) source, size_t sbegin, size_t count)
+{
+  /* TODO: Ensure trailing \0 remains at end */
+  vector_insert(_(dest).data, dbegin, _(source).data, sbegin, count);
 }
 
 /***************************************************

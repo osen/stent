@@ -19,6 +19,8 @@ int main()
   emp = allocate(Employee);
   mgr = cast(Manager, emp);
 
+  _(mgr).id = 9;
+
   release(emp);
 
   return 0;
