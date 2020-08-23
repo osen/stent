@@ -277,6 +277,9 @@ void _vector_insert(vector(void) ptr, size_t before,
     } \
   }
 
+#define vector_push(V, E) \
+  vector_push_back(V, E)
+
 #define vector_fill(V, S, N, D) \
   do \
   { \
