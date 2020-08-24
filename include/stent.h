@@ -80,7 +80,7 @@
  * operation is type safe.
  *****************************************************************************/
 #define allocate(T) \
-  (ref(T))_stent_alloc(sizeof(struct T), #T)
+  (ref(T))_stent_alloc(sizeof(struct T), #T, __FILE__, __LINE__)
 
 /*****************************************************************************
  * release(P)
@@ -112,7 +112,7 @@
 #define void_cast(R) \
   _stent_cast("void", (refvoid)_assert_ref(R), __FILE__, __LINE__)
 
-refvoid _stent_alloc(size_t size, const char *type);
+refvoid _stent_alloc(size_t size, const char *type, const char *file, int line);
 void _stent_free(refvoid ptr, const char *file, size_t line);
 
 refvoid _stent_cast(const char *type, refvoid ptr,
@@ -137,7 +137,7 @@ int _svalid(refvoid ptr, const char *file, size_t line);
     1) ? V : NULL)
 
 #define vector_new(T) \
-  (vector(T))_vector_new(sizeof(T), "vector("#T")")
+  (vector(T))_vector_new(sizeof(T), "vector("#T")", __FILE__, __LINE__)
 
 #define vector_delete(V) \
   _vector_delete((vector(void))_assert_vector(V), __FILE__, __LINE__)
@@ -176,7 +176,7 @@ int _svalid(refvoid ptr, const char *file, size_t line);
 #define vector_insert(V, B, S, I, N) \
   _vector_insert((vector(void))_assert_vector(V), B, (vector(void))_assert_vector(S), I, N)
 
-vector(void) _vector_new(size_t size, const char *type);
+vector(void) _vector_new(size_t size, const char *type, const char *file, int line);
 void _vector_delete(vector(void) ptr, const char *file, size_t line);
 size_t _vector_size(vector(void) ptr);
 void _vector_resize(vector(void) ptr, size_t size);
@@ -385,6 +385,8 @@ struct Allocation
   void *ptr;        /* Pointer to the native C memory block */
   int expired;      /* Track whether allocation has been freed */
   const char *type; /* The specified type for run-time type identification */
+  const char *file; /* The source unit file the memory was allocated in */
+  int line;         /* The line number the memory was allocated in */
 };
 
 /*****************************************************************************
@@ -437,7 +439,9 @@ static void _stent_atexit(void)
       if(!sb->allocations[ai].expired)
       {
         fprintf(stderr,
-          "Warning: Allocated memory persisted after application exit [%s]\n",
+          "Warning: Allocated memory [%s:%i] persisted after application exit [%s]\n",
+          sb->allocations[ai].file,
+          sb->allocations[ai].line,
           sb->allocations[ai].type);
 
         doAbort = 1;
@@ -491,7 +495,7 @@ static void _stent_init()
  * properties on the allocation such as type and return the value casted to
  * refvoid.
  *****************************************************************************/
-refvoid _stent_alloc(size_t size, const char *type)
+refvoid _stent_alloc(size_t size, const char *type, const char *file, int line)
 {
   struct Allocation *rtn = NULL;
   struct Block *sb = NULL;
@@ -525,6 +529,8 @@ refvoid _stent_alloc(size_t size, const char *type)
   }
 
   rtn->type = type;
+  rtn->file = file;
+  rtn->line = line;
 
   return (refvoid)rtn;
 }
@@ -639,7 +645,7 @@ struct _StentVector
 };
 
 #ifdef STENT_ENABLE
-vector(void) _vector_new(size_t size, const char *type)
+vector(void) _vector_new(size_t size, const char *type, const char *file, int line)
 #else
 vector(void) _vector_new(size_t size)
 #endif
@@ -647,7 +653,7 @@ vector(void) _vector_new(size_t size)
   ref(_StentVector) rtn = NULL;
 
 #ifdef STENT_ENABLE
-  rtn = (ref(_StentVector))_stent_alloc(sizeof(struct _StentVector), type);
+  rtn = (ref(_StentVector))_stent_alloc(sizeof(struct _StentVector), type, file, line);
 #else
   rtn = allocate(_StentVector);
 #endif
