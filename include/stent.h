@@ -7,6 +7,11 @@
  * - _svalid should ensure passed in pointer is within allocated blocks
  * - Can temporaries be supported?
  *****************************************************************************/
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef STENT_STENT_H
 #define STENT_STENT_H
 
@@ -301,6 +306,7 @@ void _vector_insert(vector(void) ptr, size_t before,
 struct sstream;
 
 ref(sstream) sstream_new();
+ref(sstream) sstream_new_cstr(const char *str);
 void sstream_delete(ref(sstream) ctx);
 
 void sstream_str_cstr(ref(sstream) ctx, const char *str);
@@ -321,6 +327,8 @@ void sstream_erase(ref(sstream) ctx, size_t idx, size_t num);
 void sstream_insert(ref(sstream) dest, size_t dbegin, ref(sstream) source, size_t sbegin, size_t count);
 
 vector(unsigned char) sstream_raw(ref(sstream) ctx);
+
+int sstream_cmp_cstr(ref(sstream) ctx, const char *str);
 
 /* TODO: Use sstream_str_cstr */
 /* void sstream_clear(ref(sstream) ctx); */
@@ -351,7 +359,7 @@ void dir_close(ref(dir) ctx);
  * Error Handling
  ***************************************************/
 
-void panic(char *message);
+void panic(const char *message);
 
 #endif
 
@@ -877,6 +885,15 @@ ref(sstream) sstream_new()
   return rtn;
 }
 
+ref(sstream) sstream_new_cstr(const char *str)
+{
+  ref(sstream) rtn = sstream_new();
+
+  sstream_str_cstr(rtn, str);
+
+  return rtn;
+}
+
 void sstream_delete(ref(sstream) ctx)
 {
   vector_delete(_(ctx).data);
@@ -1110,6 +1127,11 @@ void sstream_insert(ref(sstream) dest, size_t dbegin, ref(sstream) source, size_
   vector_insert(_(dest).data, dbegin, _(source).data, sbegin, count);
 }
 
+int sstream_cmp_cstr(ref(sstream) ctx, const char *str)
+{
+  return strcmp(sstream_cstr(ctx), str);
+}
+
 /***************************************************
  * Directory Handling
  ***************************************************/
@@ -1250,12 +1272,16 @@ void ifstream_getline(ref(ifstream) ctx, ref(sstream) out)
   }
 }
 
-void panic(char *message)
+void panic(const char *message)
 {
   printf("Panic: %s\n", message);
 
   abort();
 }
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
