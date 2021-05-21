@@ -15,8 +15,6 @@ extern "C"
 #ifndef STENT_STENT_H
 #define STENT_STENT_H
 
-#include <dirent.h>
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -26,7 +24,9 @@ extern "C"
  * Compile time flag to enable the tool. If disabled then dummy operations are
  * used instead. Facilities such as vector(T) are always available.
  *****************************************************************************/
-#define STENT_ENABLE
+#ifndef STENT_DISABLE
+  #define STENT_ENABLE
+#endif
 
 #define STENT_BLOCKSIZE 1024
 
@@ -124,6 +124,14 @@ refvoid _stent_cast(const char *type, refvoid ptr,
   const char *file, size_t line);
 
 int _svalid(refvoid ptr, const char *file, size_t line);
+
+/***************************************************
+ * Array
+ ***************************************************/
+size_t _array_check(size_t as, size_t es, size_t idx);
+
+#define array_at(A, I) \
+  (A[_array_check(sizeof(A), sizeof(A[0]), I)])
 
 /***************************************************
  * Vector
@@ -259,25 +267,26 @@ void _vector_delete(vector(void) ptr);
 size_t _vector_size(vector(void) ptr);
 void _vector_resize(vector(void) ptr, size_t size);
 void _vector_clear(vector(void) ptr);
-size_t _vector_valid(vector(void) ptr, size_t idx);
+//size_t _vector_valid(vector(void) ptr, size_t idx);
 void _vector_erase(vector(void) ptr, size_t idx, size_t num);
 
 void _vector_insert(vector(void) ptr, size_t before,
   vector(void) source, size_t idx, size_t num);
+
+#define array_at(A, I) (A[I])
 
 #endif
 
 /***************************************************
  * Both
  ***************************************************/
-#define _var(TAG) __##__LINE__##TAG__
-
 #define foreach(VAR, VEC, BODY) \
   { \
-    size_t _var(i) = 0; \
-    for(; _var(i) < vector_size(VEC); ++_var(i)) \
+    size_t __var_i = 0; \
+    size_t __var_size = vector_size(VEC); \
+    for(; __var_i < __var_size; ++__var_i) \
     { \
-      VAR = vector_at(VEC, _var(i)); \
+      VAR = vector_at(VEC, __var_i); \
       BODY \
     } \
   }
@@ -306,6 +315,7 @@ void _vector_insert(vector(void) ptr, size_t before,
 struct sstream;
 
 ref(sstream) sstream_new();
+ref(sstream) sstream_new_str(ref(sstream) other);
 ref(sstream) sstream_new_cstr(const char *str);
 void sstream_delete(ref(sstream) ctx);
 
@@ -316,6 +326,9 @@ void sstream_append_char(ref(sstream) ctx, unsigned char c);
 void sstream_append_cstr(ref(sstream) ctx, const char *str);
 void sstream_append_int(ref(sstream) ctx, int val);
 void sstream_append_float(ref(sstream) ctx, float val);
+
+int sstream_compare_cstr(ref(sstream) ctx, const char *str);
+int sstream_compare(ref(sstream) ctx, ref(sstream) other);
 
 void sstream_split(ref(sstream) ctx, unsigned char c, vector(ref(sstream)) out);
 void sstream_split_eol(ref(sstream) ctx, vector(ref(sstream)) out);
@@ -339,11 +352,14 @@ int sstream_cmp_cstr(ref(sstream) ctx, const char *str);
 
 struct ifstream;
 
-ref(ifstream) ifstream_open_cstr(char *path);
+ref(ifstream) ifstream_popen_cstr(const char *cmd);
+ref(ifstream) ifstream_popen(ref(sstream) cmd);
+ref(ifstream) ifstream_open_cstr(const char *path);
 ref(ifstream) ifstream_open(ref(sstream) path);
 void ifstream_close(ref(ifstream) ctx);
 int ifstream_eof(ref(ifstream) ctx);
 void ifstream_getline(ref(ifstream) ctx, ref(sstream) out);
+void ifstream_read(ref(ifstream) ctx, vector(unsigned char) out);
 
 /***************************************************
  * Directory Handling
@@ -364,6 +380,7 @@ void panic(const char *message);
 #endif
 
 #ifdef STENT_IMPLEMENTATION
+#undef STENT_IMPLEMENTATION
 /*****************************************************************************
  * STENT_IMPLEMENTATION
  *
@@ -618,7 +635,6 @@ int _svalid(refvoid ptr, const char *file, size_t line)
     abort();
   }
 
-
   /*
    * TODO: Check to see if ptr is within a block.
    */
@@ -636,6 +652,24 @@ int _svalid(refvoid ptr, const char *file, size_t line)
   }
 
   return 1;
+}
+
+/*****************************************************************************
+ * _array_check
+ *
+ * TODO: Pass through file and line number.
+ *****************************************************************************/
+size_t _array_check(size_t as, size_t es, size_t idx)
+{
+  if(es * idx >= as)
+  {
+    fprintf(stderr, "Error: Index [index=%lu] out of bounds [size=%lu]\n",
+      (unsigned long)idx, (unsigned long)as / es);
+
+    abort();
+  }
+
+  return idx;
 }
 
 #endif
@@ -786,7 +820,7 @@ void _vector_erase(vector(void) ptr, size_t idx, size_t num)
   if(idx >= _(v).size ||
     idx + num > _(v).size)
   {
-    fprintf(stderr, "Error: Index out of bounds [size=%i] [index=%i]\n", (int)_(v).size, (int)(idx + num));
+    fprintf(stderr, "Error: Index out of bounds [size=%i] [index=%i] [num=%i]\n", (int)_(v).size, (int)idx, (int)num);
     abort();
   }
 
@@ -885,6 +919,15 @@ ref(sstream) sstream_new()
   return rtn;
 }
 
+ref(sstream) sstream_new_str(ref(sstream) other)
+{
+  ref(sstream) rtn = sstream_new();
+
+  sstream_str(rtn, other);
+
+  return rtn;
+}
+
 ref(sstream) sstream_new_cstr(const char *str)
 {
   ref(sstream) rtn = sstream_new();
@@ -898,6 +941,16 @@ void sstream_delete(ref(sstream) ctx)
 {
   vector_delete(_(ctx).data);
   release(ctx);
+}
+
+int sstream_compare_cstr(ref(sstream) ctx, const char *str)
+{
+  return strcmp(sstream_cstr(ctx), str);
+}
+
+int sstream_compare(ref(sstream) ctx, ref(sstream) other)
+{
+  return sstream_compare_cstr(ctx, sstream_cstr(other));
 }
 
 void sstream_append(ref(sstream) ctx, ref(sstream) str)
@@ -1123,7 +1176,20 @@ vector(unsigned char) sstream_raw(ref(sstream) ctx)
 
 void sstream_insert(ref(sstream) dest, size_t dbegin, ref(sstream) source, size_t sbegin, size_t count)
 {
-  /* TODO: Ensure trailing \0 remains at end */
+  if(dbegin > sstream_length(dest))
+  {
+    fprintf(stderr, "Error: Attempting to insert past end of stream\n");
+
+    abort();
+  }
+
+  if(sbegin + count > sstream_length(source))
+  {
+    fprintf(stderr, "Error: Selection reaches end of stream\n");
+
+    abort();
+  }
+
   vector_insert(_(dest).data, dbegin, _(source).data, sbegin, count);
 }
 
@@ -1132,9 +1198,11 @@ int sstream_cmp_cstr(ref(sstream) ctx, const char *str)
   return strcmp(sstream_cstr(ctx), str);
 }
 
+#ifndef _WIN32
 /***************************************************
  * Directory Handling
  ***************************************************/
+#include <dirent.h>
 
 struct dir
 {
@@ -1169,6 +1237,7 @@ void dir_close(ref(dir) ctx)
   closedir(_(ctx).dp);
   release(ctx);
 }
+#endif
 
 /***************************************************
  * File Stream
@@ -1177,9 +1246,10 @@ void dir_close(ref(dir) ctx)
 struct ifstream
 {
   FILE *fp;
+  int pipe;
 };
 
-ref(ifstream) ifstream_open_cstr(char *path)
+ref(ifstream) ifstream_open_cstr(const char *path)
 {
   ref(ifstream) rtn = NULL;
   FILE *fp = NULL;
@@ -1197,20 +1267,53 @@ ref(ifstream) ifstream_open_cstr(char *path)
   return rtn;
 }
 
+
+ref(ifstream) ifstream_popen_cstr(const char *cmd)
+{
+  ref(ifstream) rtn = NULL;
+  FILE *fp = NULL;
+
+  fp = popen(cmd, "r");
+
+  if(!fp)
+  {
+    return NULL;
+  }
+
+  rtn = allocate(ifstream);
+  _(rtn).fp = fp;
+  _(rtn).pipe = 1;
+
+  return rtn;
+}
+
 ref(ifstream) ifstream_open(ref(sstream) path)
 {
   return ifstream_open_cstr(sstream_cstr(path));
 }
 
+ref(ifstream) ifstream_popen(ref(sstream) cmd)
+{
+  return ifstream_popen_cstr(sstream_cstr(cmd));
+}
+
 void ifstream_close(ref(ifstream) ctx)
 {
-  fclose(_(ctx).fp);
+  if(_(ctx).pipe)
+  {
+    pclose(_(ctx).fp);
+  }
+  else
+  {
+    fclose(_(ctx).fp);
+  }
+
   release(ctx);
 }
 
 int ifstream_eof(ref(ifstream) ctx)
 {
-  char c = 0;
+  int c = 0;
 
   if(feof(_(ctx).fp))
   {
@@ -1227,6 +1330,30 @@ int ifstream_eof(ref(ifstream) ctx)
   ungetc(c, _(ctx).fp);
 
   return 0;
+}
+
+void ifstream_read(ref(ifstream) ctx, vector(unsigned char) out)
+{
+  unsigned char buf[1024] = {0};
+
+  vector_clear(out);
+
+  while(1)
+  {
+    size_t ci = 0;
+
+    size_t len = fread(buf, sizeof(unsigned char), 1024, _(ctx).fp);
+
+    if(!len)
+    {
+      break;
+    }
+
+    for(ci = 0; ci < len; ci++)
+    {
+      vector_push(out, buf[ci]);
+    }
+  }
 }
 
 void ifstream_getline(ref(ifstream) ctx, ref(sstream) out)
@@ -1256,17 +1383,21 @@ void ifstream_getline(ref(ifstream) ctx, ref(sstream) out)
     {
       rc = buf[ci];
 
-      if(rc == '\0')
-      {
-        break;
-      }
-
       if(rc == '\n')
       {
         return;
       }
+      else if(rc == '\0')
+      {
+        break;
+      }
+      else if(rc == '\r')
+      { }
+      else
+      {
+        sstream_append_char(out, rc);
+      }
 
-      sstream_append_char(out, rc);
       ci++;
     }
   }
