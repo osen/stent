@@ -158,6 +158,11 @@ size_t _array_check(size_t as, size_t es, size_t idx);
 #define vector_size(V) \
   _vector_size((vector(void))_assert_vector(V))
 
+#define vector_compare(V1, V2) \
+  _vector_compare( \
+    (vector(void))_assert_vector(V1), \
+    (vector(void))_assert_vector(V2))
+
 #define vector_erase(V, I, N) \
   _vector_erase((vector(void))_assert_vector(V), I, N)
 
@@ -192,13 +197,28 @@ size_t _array_check(size_t as, size_t es, size_t idx);
 vector(void) _vector_new(size_t size, const char *type, const char *file, int line);
 void _vector_delete(vector(void) ptr, const char *file, size_t line);
 size_t _vector_size(vector(void) ptr);
+int _vector_compare(vector(void) ptr1, vector(void) ptr2);
 void _vector_resize(vector(void) ptr, size_t size);
 void _vector_clear(vector(void) ptr);
 size_t _vector_valid(vector(void) ptr, size_t idx);
+size_t _sstream_valid(vector(void) ptr, size_t idx);
 void _vector_erase(vector(void) ptr, size_t idx, size_t num);
 
 void _vector_insert(vector(void) ptr, size_t before,
   vector(void) source, size_t idx, size_t num);
+
+/*
+unsigned char sstream_at(ref(sstream) ctx, size_t idx);
+
+#define sstream_at(S, I) \
+  vector_at(_(S).data, I)
+
+#define sstream_at(S, I) \
+  (_(_(S).data)[_vector_valid((vector(void))_assert_vector(_(S).data), I + 1) - 1])
+*/
+
+#define sstream_at(S, I) \
+  (_(_(S).data)[_sstream_valid((vector(void))_assert_vector(_(S).data), I)])
 
 #else
 
@@ -239,6 +259,9 @@ void _vector_insert(vector(void) ptr, size_t before,
 #define vector_size(V) \
   _vector_size((vector(void))V)
 
+#define vector_compare(V1, V2) \
+  _vector_compare((vector(void))V1, (vector(void))V2)
+
 #define vector_push_back(V, E) \
   do \
   { \
@@ -265,15 +288,21 @@ void _vector_insert(vector(void) ptr, size_t before,
 vector(void) _vector_new(size_t size);
 void _vector_delete(vector(void) ptr);
 size_t _vector_size(vector(void) ptr);
+int _vector_compare(vector(void) ptr1, vector(void) ptr2);
 void _vector_resize(vector(void) ptr, size_t size);
 void _vector_clear(vector(void) ptr);
-//size_t _vector_valid(vector(void) ptr, size_t idx);
+/*
+size_t _vector_valid(vector(void) ptr, size_t idx);
+*/
 void _vector_erase(vector(void) ptr, size_t idx, size_t num);
 
 void _vector_insert(vector(void) ptr, size_t before,
   vector(void) source, size_t idx, size_t num);
 
 #define array_at(A, I) (A[I])
+
+#define sstream_at(S, I) \
+   (vector_at(_(S).data, I))
 
 #endif
 
@@ -312,7 +341,13 @@ void _vector_insert(vector(void) ptr, size_t before,
  * String Stream
  ***************************************************/
 
+/*
 struct sstream;
+*/
+struct sstream
+{
+  vector(unsigned char) data;
+};
 
 ref(sstream) sstream_new();
 ref(sstream) sstream_new_str(ref(sstream) other);
@@ -333,9 +368,10 @@ int sstream_compare(ref(sstream) ctx, ref(sstream) other);
 void sstream_split(ref(sstream) ctx, unsigned char c, vector(ref(sstream)) out);
 void sstream_split_eol(ref(sstream) ctx, vector(ref(sstream)) out);
 char *sstream_cstr(ref(sstream) ctx);
-unsigned char sstream_at(ref(sstream) ctx, size_t idx);
+
 size_t sstream_length(ref(sstream) ctx);
 void sstream_erase(ref(sstream) ctx, size_t idx, size_t num);
+void sstream_resize(ref(sstream) ctx, size_t length);
 
 void sstream_insert(ref(sstream) dest, size_t dbegin, ref(sstream) source, size_t sbegin, size_t count);
 
@@ -732,6 +768,22 @@ size_t _vector_size(vector(void) ptr)
   return _(v).size;
 }
 
+int _vector_compare(vector(void) ptr1, vector(void) ptr2)
+{
+  ref(_StentVector) v1 = NULL;
+  ref(_StentVector) v2 = NULL;
+
+  v1 = (ref(_StentVector))ptr1;
+  v2 = (ref(_StentVector))ptr2;
+
+  if(_(v1).size != _(v2).size)
+  {
+    return 1;
+  }
+
+  return memcmp(_(v1).data, _(v2).data, _(v1).size);
+}
+
 void _vector_clear(vector(void) ptr)
 {
   ref(_StentVector) v = NULL;
@@ -806,6 +858,14 @@ size_t _vector_valid(vector(void) ptr, size_t idx)
   fprintf(stderr, "Error: Index [index=%lu] out of bounds [size=%lu]\n",
     (unsigned long)idx, (unsigned long)_(v).size);
   abort();
+}
+
+size_t _sstream_valid(vector(void) ptr, size_t idx)
+{
+  /* Check we are not overflowing into the '\0' terminator */
+  _vector_valid(ptr, idx + 1);
+
+  return _vector_valid(ptr, idx);
 }
 
 void _vector_erase(vector(void) ptr, size_t idx, size_t num)
@@ -901,10 +961,12 @@ void _vector_insert(vector(void) ptr, size_t before,
  * String Stream
  ***************************************************/
 
+/*
 struct sstream
 {
   vector(unsigned char) data;
 };
+*/
 
 static char _scratch[256];
 
@@ -1005,10 +1067,17 @@ size_t sstream_length(ref(sstream) ctx)
   return vector_size(_(ctx).data) - 1;
 }
 
+/*
 unsigned char sstream_at(ref(sstream) ctx, size_t idx)
 {
+  if(idx >= sstream_length(ctx))
+  {
+    panic("Character index out of range");
+  }
+
   return vector_at(_(ctx).data, idx);
 }
+*/
 
 void sstream_split(ref(sstream) ctx, unsigned char c, vector(ref(sstream)) out)
 {
@@ -1155,6 +1224,17 @@ void sstream_erase(ref(sstream) ctx, size_t idx, size_t num)
   vector_erase(_(ctx).data, idx, num);
 }
 
+void sstream_resize(ref(sstream) ctx, size_t length)
+{
+  if(length == sstream_length(ctx))
+  {
+    return;
+  }
+
+  vector_resize(_(ctx).data, length + 1);
+  vector_at(_(ctx).data, length) = '\0';
+}
+
 void sstream_str_cstr(ref(sstream) ctx, const char *str)
 {
   vector_clear(_(ctx).data);
@@ -1267,13 +1347,16 @@ ref(ifstream) ifstream_open_cstr(const char *path)
   return rtn;
 }
 
-
 ref(ifstream) ifstream_popen_cstr(const char *cmd)
 {
   ref(ifstream) rtn = NULL;
   FILE *fp = NULL;
 
+#ifdef WIN32
+  fp = _popen(cmd, "r");
+#else
   fp = popen(cmd, "r");
+#endif
 
   if(!fp)
   {
@@ -1301,7 +1384,11 @@ void ifstream_close(ref(ifstream) ctx)
 {
   if(_(ctx).pipe)
   {
+#ifdef WIN32
+    _pclose(_(ctx).fp);
+#else
     pclose(_(ctx).fp);
+#endif
   }
   else
   {
