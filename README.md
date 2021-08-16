@@ -1,3 +1,5 @@
+![Stent Logo](/doc/logo.png)
+
 Stent
 =====
 Completely avoid dangling pointers in C.
