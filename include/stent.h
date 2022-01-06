@@ -1419,7 +1419,7 @@ int ifstream_eof(ref(ifstream) ctx)
   return 0;
 }
 
-void ifstream_read(ref(ifstream) ctx, vector(unsigned char) out)
+void ifstream_read_contents(ref(ifstream) ctx, vector(unsigned char) out)
 {
   unsigned char buf[1024] = {0};
 
@@ -1441,6 +1441,15 @@ void ifstream_read(ref(ifstream) ctx, vector(unsigned char) out)
       vector_push(out, buf[ci]);
     }
   }
+}
+
+void ifstream_read(ref(ifstream) ctx, vector(unsigned char) out)
+{
+  size_t ci = 0;
+
+  size_t len = fread(&vector_at(out, 0), sizeof(unsigned char), vector_size(out), _(ctx).fp);
+
+  vector_resize(out, len);
 }
 
 void ifstream_getline(ref(ifstream) ctx, ref(sstream) out)
