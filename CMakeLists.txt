@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 project(STENT C)
 
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -pedantic -Wall -Werror")
+add_definitions(-D_XOPEN_SOURCE)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -pedantic -Wall -Werror")
 
 include_directories(
   include

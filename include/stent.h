@@ -1445,8 +1445,6 @@ void ifstream_read_contents(ref(ifstream) ctx, vector(unsigned char) out)
 
 void ifstream_read(ref(ifstream) ctx, vector(unsigned char) out)
 {
-  size_t ci = 0;
-
   size_t len = fread(&vector_at(out, 0), sizeof(unsigned char), vector_size(out), _(ctx).fp);
 
   vector_resize(out, len);
