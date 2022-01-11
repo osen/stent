@@ -32,6 +32,8 @@ create_test(void_cast true)
 create_test(vector true)
 create_test(fstream true)
 
+create_test(vec true)
+
 create_test(dangling_ref false)
 create_test(dangling_ref_copy false)
 create_test(invalid_cast false)
