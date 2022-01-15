@@ -716,7 +716,7 @@ size_t _array_check(size_t as, size_t es, size_t idx)
 
 struct _StentVector
 {
-  char *data;
+  unsigned char *data;
   size_t size;
   size_t allocated;
   size_t elementSize;
@@ -797,7 +797,7 @@ void _vector_resize(vector(void) ptr, size_t size)
 {
   ref(_StentVector) v = NULL;
   size_t s = 0;
-  void *d = NULL;
+  unsigned char *d = NULL;
 
   v = (ref(_StentVector))ptr;
 
@@ -829,7 +829,7 @@ void _vector_resize(vector(void) ptr, size_t size)
     s = s * 2;
   }
 
-  d = calloc(s, _(v).elementSize);
+  d = (unsigned char *)calloc(s, _(v).elementSize);
 
   if(!d)
   {
